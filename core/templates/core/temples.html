@@ -1,0 +1,63 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<section class="bg-black min-h-screen pt-32 pb-16 px-6">
+
+    <!-- Heading -->
+    <div class="text-center mb-14">
+        <h1 class="text-4xl md:text-5xl font-bold text-yellow-400">
+            Sacred Temples 🛕
+        </h1>
+        <p class="text-gray-400 mt-4 text-lg">
+            Explore divine places across India
+        </p>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid gap-10 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+
+
+        {% for temple in temples %}
+        <div class="bg-zinc-900 rounded-2xl overflow-hidden shadow-lg 
+                    hover:shadow-yellow-500/20 transition duration-500 
+                    transform hover:-translate-y-2">
+            <div class="relative w-full aspect-[16/9] overflow-hidden rounded-t-2xl">
+                <!-- Image -->
+                <!-- Image (16:9 Ratio) -->
+                <div class="aspect-video overflow-hidden">
+                    <img src="{{ temple.image.url }}" alt="{{ temple.name }}"
+                        class="w-full h-full object-cover hover:scale-110 transition duration-700">
+                </div>
+
+                <!-- Content -->
+                <div class="p-6">
+
+                    <h2 class="text-2xl font-semibold text-yellow-400">
+                        {{ temple.name }}
+                    </h2>
+
+                    <p class="text-gray-400 text-sm mt-2">
+                        📍 {{ temple.location }}
+                    </p>
+
+                    <p class="text-gray-300 mt-4 line-clamp-3">
+                        {{ temple.description|truncatewords:50 }}
+                    </p>
+
+                    <a href="{% url 'temple_detail' temple.id %}" class="mt-6 inline-block w-full text-center bg-yellow-500 
+                          text-black font-semibold py-2 rounded-xl 
+                          hover:bg-yellow-400 transition">
+                        View Details
+                    </a>
+
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-gray-400">No temples added yet.</p>
+        {% endfor %}
+
+    </div>
+
+</section>
+{% endblock %}

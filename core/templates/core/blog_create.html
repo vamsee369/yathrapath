@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-6 py-24">
+    <h1 class="text-4xl font-bold text-yellow-400 mb-6">Write a Blog</h1>
+    <form method="post" enctype="multipart/form-data" class="flex flex-col gap-6">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="px-6 py-3 bg-yellow-500 text-black rounded-full hover:bg-yellow-400 transition">
+            Submit
+        </button>
+    </form>
+</div>
+{% endblock %}

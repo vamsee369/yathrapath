@@ -1,0 +1,153 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<!-- Temple Showcase Section -->
+<section class="max-w-7xl mx-auto px-6 py-24">
+
+    <!--<h2 class="text-4xl font-bold text-center text-yellow-400 font-[Playfair_Display] mb-16">
+        Sacred Destinations-->
+    </h2>
+    <!-- Divine Map Section -->
+
+
+    <section class="max-w-7xl mx-auto px-6 pt-4 pb-16">
+
+        <h2 class="text-4xl font-bold text-center text-yellow-400 font-[Playfair_Display] mb-14">
+            Explore on the Divine Map
+        </h2>
+
+        <div class="backdrop-blur-xl bg-white/10 border border-white/20 
+                rounded-3xl overflow-hidden shadow-2xl">
+
+            <div id="map" class="h-[500px] w-full"></div>
+
+        </div>
+
+    </section>
+
+    <section class="px-6 py-24">
+
+        <!-- Centered Heading -->
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold text-yellow-400">
+                Sacred Temples 🛕
+            </h2>
+            <p class="text-gray-400 mt-4 text-lg">
+                Discover Sacred Places and Temples across India
+            </p>
+        </div>
+
+        <!-- Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 justify-items-center">
+
+            {% for temple in temples %}
+            <div
+                class="w-72 backdrop-blur-xl bg-white/10 p-6 rounded-2xl shadow-xl border border-white/20 hover:scale-105 transition duration-500">
+
+                <img src="{{ temple.image.url }}" class="rounded-xl h-48 w-full object-cover mb-4">
+
+                <h3 class="text-2xl font-semibold text-orange-400 mb-2">
+                    {{ temple.name }}
+                </h3>
+
+                <p class="text-gray-300 text-sm">
+                    {{ temple.description|truncatewords:15 }}
+                </p>
+
+                <a href="{% url 'temples' %}"
+                    class="inline-block mt-4 text-yellow-400 hover:text-yellow-300 transition">
+                    Explore 🧭
+                </a>
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <!-- View All Button 
+        <div class="text-center mt-14">
+            <a href="{% url 'temples' %}"
+                class="inline-block bg-yellow-500 text-black font-semibold px-8 py-3 rounded-xl hover:bg-yellow-400 transition">
+                View All Temples →
+            </a>
+        </div>-->
+
+    </section>
+
+</section>
+<div class="text-center mb-12">
+    <h2 class="text-4xl md:text-5xl font-bold text-yellow-400">
+        Explore 🗺
+    </h2>
+    <p class="text-gray-400 mt-4 text-lg">
+        Immerse Yourself In The Rich Tapestry of India's Spiritual Heritage.
+    </p>
+</div>
+
+<div class="flex items-center justify-center min-h-[70vh] px-6">
+
+    <div class="grid md:grid-cols-3 gap-10 max-w-6xl w-full">
+
+        <!-- Temple Explorer Card -->
+        <div
+            class="backdrop-blur-lg bg-white/10 border border-white/20 shadow-2xl rounded-3xl p-12 text-center transition duration-500 hover:scale-105">
+
+            <h1 class="text-4xl font-bold text-yellow-400 font-[Playfair_Display] mb-6">
+                Discover Divine Destinations
+            </h1>
+
+            <p class="text-gray-200 text-lg font-[Poppins] mb-8 leading-relaxed">
+                Explore sacred temples and spiritual destinations across India.
+            </p>
+
+            <a href="{% url 'temples' %}"
+                class="px-8 py-3 bg-yellow-500 text-black font-semibold rounded-full shadow-lg hover:bg-yellow-400 transition duration-300">
+                Explore Temples ⛩️
+            </a>
+
+        </div>
+
+        <!-- Trip Expense Tracker Card -->
+        <div
+            class="backdrop-blur-lg bg-white/10 border border-white/20 shadow-2xl rounded-3xl p-12 text-center transition duration-500 hover:scale-105">
+
+            <h1 class="text-4xl font-bold text-yellow-400 font-[Playfair_Display] mb-6">
+                Trip Expense Tracker
+            </h1>
+
+            <p class="text-gray-200 text-lg font-[Poppins] mb-8 leading-relaxed">
+                Track the budget and Expenses of the trip and make your journey hassle free.
+            </p>
+
+            <a href="https://tripexpensetracker.onrender.com/" target="_blank"
+                class="px-8 py-3 bg-yellow-500 text-black font-semibold rounded-full shadow-lg hover:bg-yellow-400 transition duration-300">
+                Open Tracker 💸
+            </a>
+
+
+        </div>
+        <div
+            class="backdrop-blur-lg bg-white/10 border border-white/20 shadow-2xl rounded-3xl p-12 text-center transition duration-500 hover:scale-105">
+
+            <h1 class="text-4xl font-bold text-yellow-400 font-[Playfair_Display] mb-6">
+                Trip route Planner
+            </h1>
+
+            <p class="text-gray-200 text-lg font-[Poppins] mb-8 leading-relaxed">
+                From here you can plan your route to visit the temples and make your journey hassle free.
+            </p>
+
+            <a href="{% url 'route_planner' %}" class="px-8 py-3 bg-yellow-500 text-black font-semibold rounded-full">
+                Plan Temple Route 🧭
+            </a>
+
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

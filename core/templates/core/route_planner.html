@@ -1,0 +1,170 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+
+<div class="flex h-screen pt-24">
+
+    <!-- LEFT ROUTE PANEL -->
+    <div
+        class="w-96 bg-[#0f0f1a]/90 backdrop-blur-xl p-6 overflow-y-auto shadow-2xl rounded-3xl border border-white/20 flex flex-col gap-6">
+
+        <!-- TITLE -->
+        <h2 class="text-2xl font-bold text-yellow-400 mb-8 text-center">
+            🧭 Temple Route Planner
+        </h2>
+
+        <!-- SELECT TEMPLES TOGGLE -->
+        <div class="flex flex-col gap-2">
+            <button id="showTemplesBtn" class="w-full py-3 rounded-xl font-semibold text-yellow-700
+                       bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500
+                       shadow-lg shadow-yellow-500/20
+                       transition-all duration-300
+                       hover:scale-[1.03] hover:shadow-yellow-400/40 flex justify-between items-center">
+                <span>Select Temples for Route</span>
+                <span id="btnArrow">⬇️</span>
+            </button>
+
+            <div id="templeContainer" class="hidden mt-2 flex flex-col gap-1">
+                <select id="templeList" multiple
+                    class="w-full h-48 p-3 rounded-xl bg-white/10 text-white border border-white/20
+                           focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 outline-none scrollbar-thin scrollbar-thumb-yellow-400/60 scrollbar-track-transparent">
+                    {% for temple in temples %}
+                    <option value="{{ temple.latitude }},{{ temple.longitude }}" data-name="{{ temple.name }}"
+                        class="text-black">
+                        {{ temple.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <p class="text-gray-400 text-xs mt-1">Hold Ctrl/Cmd to select multiple temples</p>
+            </div>
+        </div>
+
+        <!-- GENERATE ROUTE BUTTON -->
+        <button onclick="generateMultiRoute()" class="group relative w-full py-3 rounded-xl font-semibold text-yellow-700
+                   bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500
+                   shadow-lg shadow-yellow-500/20
+                   transition-all duration-300
+                   hover:scale-[1.03] hover:shadow-yellow-400/40">
+            <span class="flex items-center justify-center gap-2">
+                Generate Route
+                <span class="group-hover:translate-x-1 transition-transform">🚗</span>
+            </span>
+        </button>
+
+        <!-- LOADING SPINNER -->
+        <div id="routeLoading"
+            class="hidden flex items-center justify-center gap-3 mt-4 p-4 rounded-xl bg-white/10 backdrop-blur-lg">
+            <div class="w-6 h-6 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-yellow-300 font-medium">Calculating best route...</p>
+        </div>
+
+        <!-- ROUTE DETAILS -->
+        <div id="routeInfo" class="hidden mt-4 p-4 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl flex flex-col gap-2
+           max-h-[60vh] overflow-y-auto">
+            <p class="text-yellow-400 font-bold text-lg">📍 Route Details</p>
+            <div id="routeDetails" class="space-y-2">
+                <!-- Segment info goes here -->
+            </div>
+            <p id="totalDistance" class="text-white font-semibold mt-2"></p>
+            <p id="totalDuration" class="text-white font-semibold"></p>
+        </div>
+
+    </div>
+
+    <!-- MAP -->
+    <div class="flex-1 p-6">
+        <div id="map" class="h-full w-full rounded-3xl overflow-hidden shadow-2xl border border-white/20"></div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // MAP INIT
+        var map = L.map('map').setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+        var routeLayer;
+        var markers = [];
+
+        // TOGGLE TEMPLE SELECT
+        const showBtn = document.getElementById("showTemplesBtn");
+        const templeContainer = document.getElementById("templeContainer");
+        const btnArrow = document.getElementById("btnArrow");
+
+        showBtn.addEventListener("click", () => {
+            templeContainer.classList.toggle("hidden");
+            btnArrow.textContent = templeContainer.classList.contains("hidden") ? "⬇️" : "⬆️";
+        });
+
+        // GENERATE MULTI-STOP ROUTE
+        window.generateMultiRoute = function () {
+            let select = document.getElementById("templeList");
+            let selected = Array.from(select.selectedOptions);
+
+            if (selected.length < 2) { alert("Please select at least 2 temples"); return; }
+
+            let coords = selected.map(opt => {
+                let [lat, lng] = opt.value.split(",").map(Number);
+                return [lng, lat]; // ORS format
+            });
+            let names = selected.map(opt => opt.dataset.name);
+
+            // Remove old layers
+            if (routeLayer) map.removeLayer(routeLayer);
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            // Add markers
+            coords.forEach((c, idx) => {
+                let m = L.marker([c[1], c[0]]).addTo(map).bindPopup(names[idx]);
+                markers.push(m);
+            });
+
+            // Show spinner
+            document.getElementById("routeLoading").classList.remove("hidden");
+            document.getElementById("routeInfo").classList.add("hidden");
+
+            // Fetch route
+            fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
+                method: "POST",
+                headers: { "Authorization": "{{ ORS_KEY }}", "Content-Type": "application/json" },
+                body: JSON.stringify({ coordinates: coords })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("routeLoading").classList.add("hidden");
+                    if (!data.features) { alert("Route not found"); return; }
+
+                    let routeCoords = data.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                    let segments = data.features[0].properties.segments;
+
+                    routeLayer = L.polyline(routeCoords, { color: "#2563EB", weight: 6 }).addTo(map);
+                    map.fitBounds(routeLayer.getBounds());
+
+                    let detailsDiv = document.getElementById("routeDetails");
+                    detailsDiv.innerHTML = "";
+                    let totalDistance = 0;
+                    let totalDuration = 0;
+
+                    segments.forEach((seg, idx) => {
+                        totalDistance += seg.distance;
+                        totalDuration += seg.duration;
+
+                        detailsDiv.innerHTML += `<p class="text-white text-sm bg-white/10 px-3 py-2 rounded-lg">
+                    ${names[idx]} → ${names[idx + 1]} : ${(seg.distance / 1000).toFixed(2)} km, ${(seg.duration / 60).toFixed(0)} min
+                </p>`;
+                    });
+
+                    document.getElementById("totalDistance").innerText = "Total Distance: " + (totalDistance / 1000).toFixed(2) + " km";
+                    document.getElementById("totalDuration").innerText = "Total Duration: " + (totalDuration / 60).toFixed(0) + " minutes";
+                    document.getElementById("routeInfo").classList.remove("hidden");
+                })
+                .catch(err => { console.log(err); alert("Error generating route"); });
+        };
+
+    });
+</script>
+
+{% endblock %}
