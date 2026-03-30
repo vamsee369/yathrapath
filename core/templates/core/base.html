@@ -80,6 +80,7 @@
     </script>
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    {% if all_temples %}
     <script id="temple-data" type="application/json">
 [
 {% for temple in all_temples %}
@@ -87,7 +88,7 @@
         "name": "{{ temple.name|escapejs }}",
         "lat": {{ temple.latitude }},
         "lng": {{ temple.longitude }},
-        "image": "{% static 'images/'|add:temple.image %}",
+        "image": "{% static 'images/temples/'|add:temple.image %}",
         "description": "{{ temple.description|default:''|truncatechars:100|escapejs }}",
         "url": "{% url 'temple_detail' temple.id %}",
         "status": "{{ temple.status }}"
@@ -95,11 +96,84 @@
 {% endfor %}
 ]
 </script>
+    {% endif %}
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
-            var map = L.map('map').setView([20.5937, 78.9629], 5);
+            var mapElement = document.getElementById('map');
+
+            if (mapElement) {
+
+                var map = L.map('map').setView([20.5937, 78.9629], 5);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+
+                var greenIcon = new L.Icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                });
+
+                var redIcon = new L.Icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                });
+
+                var blueIcon = new L.Icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                });
+
+                const templeData = JSON.parse(
+                    document.getElementById('temple-data')?.textContent || "[]"
+                );
+
+                var markers = [];
+
+                templeData.forEach(function (temple) {
+
+                    var popupContent = `
+        <div class="w-64 backdrop-blur-xl bg-white/30 rounded-2xl p-3 shadow-xl border border-white/20">
+            
+            ${temple.image ? `<img src="${temple.image}" class="w-full h-32 object-cover rounded-xl mb-2">` : ''}
+
+            <h3 class="text-lg font-bold text-teal-700">${temple.name}</h3>
+            <p class="text-sm text-white mt-1">${temple.description || ''}</p>
+
+            <a href="${temple.url}" class="inline-block mt-3 text-yellow-400">
+                View Details
+            </a>
+        </div>
+        `;
+
+                    let selectedIcon = redIcon;
+
+                    if (temple.status === "completed") {
+                        selectedIcon = greenIcon;
+                    } else if (temple.status === "planned") {
+                        selectedIcon = blueIcon;
+                    }
+
+                    var marker = L.marker([temple.lat, temple.lng], { icon: selectedIcon })
+                        .addTo(map)
+                        .bindPopup(popupContent);
+
+                    markers.push(marker);
+                });
+
+                if (markers.length > 0) {
+                    var group = new L.featureGroup(markers);
+                    map.fitBounds(group.getBounds().pad(0.2));
+                }
+            }
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
