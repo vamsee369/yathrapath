@@ -25,7 +25,8 @@
                 <!-- Image -->
                 <!-- Image (16:9 Ratio) -->
                 <div class="aspect-video overflow-hidden">
-                    <img src="{% static 'images/temples/'|add:temple.image %}" alt="{{ temple.name }}"
+                    <img src="{% static 'images/temples/' %}{{ temple.image.name|cut:'temples/' }}"
+                        alt="{{ temple.name }}"
                         class="w-full h-full object-cover hover:scale-110 transition duration-700">
                 </div>
 

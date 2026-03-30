@@ -88,7 +88,7 @@
         "name": "{{ temple.name|escapejs }}",
         "lat": {{ temple.latitude }},
         "lng": {{ temple.longitude }},
-        "image": "{% static 'images/temples/'|add:temple.image %}",
+        "image": "{% static 'images/temples/' %}{{ temple.image.name|cut:'temples/' }}",
         "description": "{{ temple.description|default:''|truncatechars:100|escapejs }}",
         "url": "{% url 'temple_detail' temple.id %}",
         "status": "{{ temple.status }}"

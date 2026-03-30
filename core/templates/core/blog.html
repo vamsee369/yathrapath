@@ -1,5 +1,5 @@
 {% extends 'core/base.html' %}
-
+{% load static %}
 {% block content %}
 <!-- Hero Section -->
 <section class="relative w-full bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#000000] text-white py-32">
@@ -20,7 +20,8 @@
         class="backdrop-blur-xl bg-white/10 p-6 rounded-3xl shadow-2xl border border-white/20 hover:-translate-y-2 hover:scale-105 transition duration-500">
 
         {% if post.image %}
-        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="rounded-2xl w-full h-52 object-cover mb-4">
+        <img src="{% static 'images/blogs/' %}{{ post.image.name|cut:'blogs/' }}" alt="{{ post.title }}"
+            class="rounded-2xl w-full h-52 object-cover mb-4">
         {% endif %}
 
         <p class="text-gray-400 text-xs mb-2">

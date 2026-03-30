@@ -1,5 +1,5 @@
 {% extends 'core/base.html' %}
-
+{% load static %}
 {% block content %}
 
 <!-- Blog Detail Section -->
@@ -23,7 +23,8 @@
     </div>
     <!-- Blog Image -->
     {% if blog.image %}
-    <img src="{{ blog.image.url }}" class="rounded-2xl w-full max-h-[600px] object-contain bg-black mb-8"> {% endif %}
+    <img src="{% static 'images/blogs/' %}{{ blog.image.name|cut:'blogs/' }}"
+        class="rounded-2xl w-full max-h-[600px] object-contain bg-black mb-8">{% endif %}
 
     <!-- Back Button -->
     <div class="mt-12">

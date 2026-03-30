@@ -1,11 +1,12 @@
 {% extends 'core/base.html' %}
-
+{% load static %}
 {% block content %}
 <div class="min-h-screen flex items-center justify-center px-6 py-32">
 
     <div class="max-w-5xl w-full backdrop-blur-xl bg-white/10 p-10 rounded-3xl shadow-2xl border border-white/20">
 
-        <img src="{{ temple.image.url }}" class="rounded-2xl w-full max-h-[600px] object-contain bg-black mb-8">
+        <img src="{% static 'images/temples/' %}{{ temple.image.name|cut:'temples/' }}"
+            class="rounded-2xl w-full max-h-[600px] object-contain bg-black mb-8">
 
         <h1 class="text-4xl font-bold text-orange-400 mb-4">
             {{ temple.name }}
