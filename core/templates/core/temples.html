@@ -1,5 +1,5 @@
 {% extends 'core/base.html' %}
-
+{% load static %}
 {% block content %}
 <section class="bg-black min-h-screen pt-32 pb-16 px-6">
 
@@ -25,7 +25,7 @@
                 <!-- Image -->
                 <!-- Image (16:9 Ratio) -->
                 <div class="aspect-video overflow-hidden">
-                    <img src="{{ temple.image.url }}" alt="{{ temple.name }}"
+                    <img src="{% static 'images/temples/'|add:temple.image %}" alt="{{ temple.name }}"
                         class="w-full h-full object-cover hover:scale-110 transition duration-700">
                 </div>
 
