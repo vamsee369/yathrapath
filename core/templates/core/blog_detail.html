@@ -23,7 +23,7 @@
     </div>
     <!-- Blog Image -->
     {% if blog.image %}
-    <img src="{% static 'images/blogs/' %}{{ blog.image.name|cut:'blogs/' }}"
+    <img src="{% static 'images/blog_images/' %}{{ blog.image.name|cut:'blog_images/' }}"
         class="rounded-2xl w-full max-h-[600px] object-contain bg-black mb-8">{% endif %}
 
     <!-- Back Button -->
