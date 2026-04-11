@@ -43,8 +43,8 @@
             {% for temple in temples %}
             <div
                 class="w-72 backdrop-blur-xl bg-white/10 p-6 rounded-2xl shadow-xl border border-white/20 hover:scale-105 transition duration-500">
-                <img src="{% if temple.image and temple.image.url %}{{ temple.image.url }}{% else %}{% static 'images/temples/' %}{{ temple.image.name|cut:'temples/' }}{% endif %}"
-                    alt="{{ temple.name }}" class="rounded-xl h-48 w-full object-cover mb-4">
+                <img src="{% static 'images/temples/' %}{{ temple.image.name|cut:'temples/' }}" alt="{{ temple.name }}"
+                    class="rounded-xl h-48 w-full object-cover mb-4">
 
                 <h3 class="text-2xl font-semibold text-orange-400 mb-2">
                     {{ temple.name }}
