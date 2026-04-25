@@ -35,16 +35,53 @@
 
     <!-- Favicon -->
     <link rel="icon" href="{% static 'images/icons/icon-192.png' %}">
+    <style>
+        /* VIDEO BACKGROUND */
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .bg-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* DARK OVERLAY (for readability) */
+        .video-container::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* CONTENT ABOVE VIDEO */
+        .content {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
 </head>
 
-<body
-    class="relative min-h-screen bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#000000] text-white overflow-x-hidden {% block body_class %}{% endblock %}">
-
+<body class="relative min-h-screen text-white overflow-x-hidden bg-black">
     <!-- Background Glow -->
     <div class="absolute w-96 h-96 bg-yellow-500 opacity-20 rounded-full blur-3xl top-10 left-10 animate-pulse"></div>
     <div class="absolute w-96 h-96 bg-orange-500 opacity-20 rounded-full blur-3xl bottom-10 right-10 animate-pulse">
     </div>
-
+    <div class="video-container">
+        <video autoplay muted loop playsinline class="bg-video">
+            <source src="{% static 'videos/bg.mp4' %}" type="video/mp4">
+        </video>
+    </div>
     <!-- Floating Center Glass Navbar -->
     <!-- Navbar -->
     <!-- base.html -->
@@ -74,7 +111,7 @@
                 </a>
                 <a href="{% url 'temples' %}"
                     class="hover:text-yellow-400 transition font-[Poppins] {% if request.path == '/temples/' %}text-yellow-400{% endif %}">
-                    Temples
+                    Destinations
                 </a>
                 <a href="{% url 'map' %}"
                     class="hover:text-yellow-400 transition font-[Poppins] {% if request.path == '/map/' %}text-yellow-400{% endif %}">
@@ -97,7 +134,7 @@
             class="hidden md:hidden mt-3 backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-5 space-y-4 text-center">
 
             <a href="{% url 'home' %}" class="block hover:text-yellow-400">Home</a>
-            <a href="{% url 'temples' %}" class="block hover:text-yellow-400">Temples</a>
+            <a href="{% url 'temples' %}" class="block hover:text-yellow-400">Destinations</a>
             <a href="{% url 'map' %}" class="block hover:text-yellow-400">Map</a>
             <a href="{% url 'blog' %}" class="block hover:text-yellow-400">Blog</a>
         </div>

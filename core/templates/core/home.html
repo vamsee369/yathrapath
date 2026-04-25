@@ -3,17 +3,85 @@
 {% block content %}
 <!-- Temple Showcase Section -->
 <section class="max-w-7xl mx-auto px-6 py-24">
+    <section class="max-w-7xl mx-auto px-6 pt-4 pb-20">
 
-    <!--<h2 class="text-4xl font-bold text-center text-yellow-400 font-[Playfair_Display] mb-16">
-        Sacred Destinations-->
-    </h2>
-    <!-- Divine Map Section -->
+        <!-- Container -->
+        <div class="w-full">
 
+            <!-- Heading -->
+            <h2 class="text-4xl font-bold text-center text-yellow-400 font-[Playfair_Display] mb-14">
+                ✧ About YathraPath ✧
+            </h2>
 
+            <!-- Card -->
+            <div class="max-w-6xl mx-auto 
+    backdrop-blur-2xl 
+    bg-gradient-to-br from-white/[0.08] to-white/[0.02] 
+    border border-white/20 
+    rounded-3xl 
+    shadow-[0_0_40px_rgba(255,215,0,0.08)]
+    relative overflow-hidden
+    h-[500px] flex items-center">
+                <!-- Glass Reflection -->
+                <div class="absolute inset-0 pointer-events-none">
+                    <div class="absolute top-0 left-0 w-full h-full 
+        bg-gradient-to-br from-white/20 via-transparent to-transparent 
+        opacity-20">
+                    </div>
+                </div>
+                <!-- Inner Glow -->
+                <div class="absolute inset-0 rounded-3xl 
+    shadow-[inset_0_0_40px_rgba(255,255,255,0.05)]">
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-10 w-full px-6 md:px-12 relative z-10">
+
+                    <!-- LEFT -->
+                    <div class="flex flex-col justify-center space-y-4">
+                        <h2 class="text-3xl md:text-5xl font-[Playfair_Display] text-white leading-tight">
+                            YathraPath
+                            <span class="block text-yellow-400 italic">
+                                A Travel Chronicle
+                            </span>
+                        </h2>
+
+                        <div class="w-14 h-[2px] bg-yellow-400"></div>
+                    </div>
+
+                    <!-- RIGHT -->
+                    <div
+                        class="flex flex-col justify-center text-gray-300 text-sm md:text-base leading-relaxed space-y-4">
+                        <p>
+                            <span class="text-white font-medium">Yathra Path - Travel as memory </span>Not every journey
+                            is meant to be forgotten.
+
+                            YathraPath is where paths turn into stories — where every temple visit, every road taken,
+                            and every moment felt is captured as it happens.
+                        </p>
+
+                        <p>
+                            It’s not just about destinations — it’s about
+                            <span class="text-yellow-400">meaning, emotion, and experience</span>.
+                        </p>
+
+                        <p class="text-gray-400 text-sm">
+                            Not a tracker. Not a checklist.
+                            A quiet space where your journeys live on — as a digital memory of where you’ve been, and
+                            what it meant.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
     <section class="max-w-7xl mx-auto px-6 pt-4 pb-16">
 
         <h2 class="text-4xl font-bold text-center text-yellow-400 font-[Playfair_Display] mb-14">
-            Explore on the Divine Map
+            Explore on the Map
         </h2>
 
         <div class="backdrop-blur-xl bg-white/10 border border-white/20 
@@ -30,10 +98,10 @@
         <!-- Centered Heading -->
         <div class="text-center mb-16">
             <h2 class="text-4xl md:text-5xl font-bold text-yellow-400">
-                Sacred Temples 🛕
+                Visited Destinations 🌌
             </h2>
             <p class="text-gray-400 mt-4 text-lg">
-                Discover Sacred Places and Temples across India
+                Discover The Most Scenic Destinations across India
             </p>
         </div>
 
@@ -80,7 +148,7 @@
         Explore 🗺
     </h2>
     <p class="text-gray-400 mt-4 text-lg">
-        Immerse Yourself In The Rich Tapestry of India's Spiritual Heritage.
+        Immerse Yourself In The Rich Tapestry of India's Heritage.
 
     </p>
 </div>
@@ -94,16 +162,16 @@
             class="backdrop-blur-lg bg-white/10 border border-white/20 shadow-2xl rounded-3xl p-12 text-center transition duration-500 hover:scale-105">
 
             <h1 class="text-4xl font-bold text-yellow-400 font-[Playfair_Display] mb-6">
-                Discover Divine Destinations
+                Discover Completed Destinations
             </h1>
 
             <p class="text-gray-200 text-lg font-[Poppins] mb-8 leading-relaxed">
-                Explore sacred temples and spiritual destinations across India.
+                Explore Heritage and Most Scenic Places.
             </p>
 
             <a href="{% url 'temples' %}"
                 class="px-8 py-3 bg-yellow-500 text-black font-semibold rounded-full shadow-lg hover:bg-yellow-400 transition duration-300">
-                Explore Temples ⛩️
+                Explore Destinations ⛩️
             </a>
 
         </div>
