@@ -4,7 +4,7 @@
 <section class="bg-black min-h-screen pt-32 pb-16 px-6">
 
     <!-- Heading -->
-    <div class="text-center mb-14">
+    <div class="text-center mb-10">
         <h1 class="text-4xl md:text-5xl font-bold text-yellow-400">
             Explore Travel Destinations 🚗
         </h1>
@@ -13,45 +13,257 @@
         </p>
     </div>
 
-    <!-- Grid -->
-    <div class="grid gap-10 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+<!-- ═══════════════════════════════════════
+     YathraPath — Search & Filter Bar
+     ═══════════════════════════════════════ -->
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+    .yp-glass {
+        background: rgba(255, 255, 255, 0.07);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: border-color 0.25s, background 0.25s;
+    }
+    .yp-glass:focus-within {
+        border-color: rgba(250, 204, 21, 0.5);
+        background: rgba(255, 255, 255, 0.10);
+    }
+    .yp-field {
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #fff;
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+        width: 100%;
+    }
+    .yp-field::placeholder { color: rgba(255,255,255,0.35); }
+    .yp-field option { background: #0f0f0f; color: #fff; }
+    .yp-float-label {
+        font-family: 'Poppins', sans-serif;
+        font-size: 9px;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(250, 204, 21, 0.55);
+        pointer-events: none;
+        position: absolute;
+        top: 9px; left: 14px;
+    }
+    .yp-divider {
+        width: 1px;
+        background: rgba(255,255,255,0.12);
+        align-self: stretch;
+        flex-shrink: 0;
+    }
+    .yp-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 11px;
+        border-radius: 999px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .yp-badge-dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .yp-badge-visited  { background: rgba(34,197,94,0.18);  border: 1px solid rgba(34,197,94,0.40);  color: #86efac; }
+    .yp-badge-planned  { background: rgba(59,130,246,0.18); border: 1px solid rgba(59,130,246,0.40); color: #93c5fd; }
+    .yp-badge-not      { background: rgba(239,68,68,0.18);  border: 1px solid rgba(239,68,68,0.40);  color: #fca5a5; }
+    .yp-badge-dot-visited { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,0.7); }
+    .yp-badge-dot-planned { background: #60a5fa; box-shadow: 0 0 6px rgba(96,165,250,0.7); }
+    .yp-badge-dot-not     { background: #f87171; box-shadow: 0 0 6px rgba(248,113,113,0.7); }
+    .yp-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px 4px 12px;
+        border-radius: 999px;
+        background: rgba(250,204,21,0.08);
+        border: 1px solid rgba(250,204,21,0.25);
+        font-family: 'Poppins', sans-serif;
+        font-size: 11px;
+        color: #facc15;
+        animation: pillIn 0.18s ease;
+    }
+    @keyframes pillIn {
+        from { opacity: 0; transform: scale(0.85); }
+        to   { opacity: 1; transform: scale(1); }
+    }
+    .yp-pill-x {
+        background: none; border: none;
+        color: rgba(250,204,21,0.5);
+        cursor: pointer; padding: 0;
+        font-size: 14px; line-height: 1;
+        display: flex; align-items: center;
+        transition: color 0.15s;
+    }
+    .yp-pill-x:hover { color: #facc15; }
+
+    @media (max-width: 640px) {
+        .yp-bar { flex-direction: column; }
+        .yp-select-group { flex-direction: column; }
+        .yp-divider { width: auto; height: 1px; }
+    }
+</style>
+
+<!-- Search & Filter Bar -->
+<!-- Search & Filter Bar -->
+<div class="max-w-4xl mx-auto mb-10">
+
+    <p style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:rgba(250,204,21,0.45);margin-bottom:10px;padding-left:2px;">
+        Find your sacred path
+    </p>
+
+    <div class="yp-bar flex gap-3 items-stretch">
+
+        <!-- Search -->
+        <div class="yp-glass rounded-2xl flex items-center gap-3 px-4 flex-1" style="height:52px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(250,204,21,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input id="search-input" type="text" class="yp-field" placeholder="Search a place by name…" autocomplete="off" style="height:100%">
+        </div>
+
+        <!-- Grouped selects -->
+        <div class="yp-glass yp-select-group rounded-2xl flex overflow-hidden" style="flex-shrink:0;">
+
+            <div class="yp-select-wrap relative flex items-center">
+                <span class="yp-float-label">State</span>
+                <select id="state-filter" aria-label="Filter by state" class="yp-field"
+                    style="padding:22px 32px 6px 14px;min-width:140px;appearance:none;-webkit-appearance:none;cursor:pointer;">
+                    <option value="">All States</option>
+                    {% for temple in temples %}
+                        <option value="{{ temple.location }}">{{ temple.location }}</option>
+                    {% endfor %}
+                </select>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(250,204,21,0.4)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;" aria-hidden="true">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
+
+            <div class="yp-divider"></div>
+
+            <div class="yp-select-wrap relative flex items-center">
+                <span class="yp-float-label">Status</span>
+                <select id="status-filter" aria-label="Filter by visit status" class="yp-field"
+                    style="padding:22px 32px 6px 14px;min-width:140px;appearance:none;-webkit-appearance:none;cursor:pointer;">
+                    <option value="">All Statuses</option>
+                    <option value="completed">Visited</option>
+                    <option value="planned">Planned</option>
+                    <option value="not_visited">Not Visited</option>
+                </select>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(250,204,21,0.4)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;" aria-hidden="true">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
+
+        </div>
+
+        <!-- Clear -->
+        <button id="clear-btn" onclick="clearFilters()" aria-label="Clear all filters"
+            class="yp-glass"
+            style="height:52px;padding:0 18px;flex-shrink:0;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;letter-spacing:0.06em;cursor:pointer;display:flex;align-items:center;gap:7px;border-radius:16px;color:rgba(250,204,21,0.45);opacity:0.5;transition:all 0.2s;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            Clear
+        </button>
+
+    </div>
+
+    <!-- Pills -->
+    <div id="yp-pills" class="flex flex-wrap gap-2 mt-3" aria-live="polite"></div>
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin-top:16px;"></div>
+</div>
+
+<!-- No Results -->
+<div id="no-results" class="hidden text-center py-20">
+    <div style="font-size:32px;color:rgba(250,204,21,0.35);margin-bottom:14px;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <line x1="11" y1="8" x2="11" y2="12"/><line x1="11" y1="16" x2="11.01" y2="16"/>
+        </svg>
+    </div>
+    <p style="font-family:'Playfair Display',serif;font-size:22px;color:rgba(255,255,255,0.8);margin:0 0 6px;">No destinations found</p>
+    <p style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(255,255,255,0.35);margin:0 0 24px;">Try adjusting your filters or exploring a different region</p>
+    <button onclick="clearFilters()"
+        style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.35);border-radius:10px;color:#facc15;font-family:'Poppins',sans-serif;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(10px);"
+        onmouseover="this.style.background='rgba(250,204,21,0.15)'"
+        onmouseout="this.style.background='rgba(250,204,21,0.08)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Reset filters
+    </button>
+</div>
+
+    <!-- Grid -->
+    <div id="temples-grid" class="grid gap-10 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 
         {% for temple in temples %}
-        <div class="bg-zinc-900 rounded-2xl overflow-hidden shadow-lg 
-                    hover:shadow-yellow-500/20 transition duration-500 
-                    transform hover:-translate-y-2">
-            <div class="relative w-full aspect-[16/9] overflow-hidden rounded-t-2xl">
-                <!-- Image -->
-                <!-- Image (16:9 Ratio) -->
+        <div class="temple-card bg-zinc-900 rounded-2xl overflow-hidden shadow-lg
+                    hover:shadow-yellow-500/20 transition duration-500
+                    transform hover:-translate-y-2"
+             data-name="{{ temple.name|lower }}"
+             data-location="{{ temple.location|lower }}"
+             data-status="{{ temple.status }}">
+
+            <div class="relative w-full overflow-hidden rounded-t-2xl">
                 <div class="aspect-video overflow-hidden">
                     <img src="{{ temple.image.url }}"
                         alt="{{ temple.name }}"
                         class="w-full h-full object-cover hover:scale-110 transition duration-700">
                 </div>
 
-                <!-- Content -->
-                <div class="p-6">
-
-                    <h2 class="text-2xl font-semibold text-yellow-400">
-                        {{ temple.name }}
-                    </h2>
-
-                    <p class="text-gray-400 text-sm mt-2">
-                        📍 {{ temple.location }}
-                    </p>
-
-                    <p class="text-gray-300 mt-4 line-clamp-3">
-                        {{ temple.description|truncatewords:50 }}
-                    </p>
-
-                    <a href="{% url 'temple_detail' temple.id %}" class="mt-6 inline-block w-full text-center bg-yellow-500 
-                          text-black font-semibold py-2 rounded-xl 
-                          hover:bg-yellow-400 transition">
-                        View Details
-                    </a>
-
+                <!-- Status Badge -->
+                <div class="absolute top-3 right-3">
+{% if temple.status == 'completed' %}
+    <span class="yp-badge yp-badge-visited">
+        <span class="yp-badge-dot yp-badge-dot-visited"></span>Visited
+    </span>
+{% elif temple.status == 'planned' %}
+    <span class="yp-badge yp-badge-planned">
+        <span class="yp-badge-dot yp-badge-dot-planned"></span>Planned
+    </span>
+{% else %}
+    <span class="yp-badge yp-badge-not">
+        <span class="yp-badge-dot yp-badge-dot-not"></span>Not Visited
+    </span>
+{% endif %}
                 </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <h2 class="text-2xl font-semibold text-yellow-400">
+                    {{ temple.name }}
+                </h2>
+
+                <p class="text-gray-400 text-sm mt-2">
+                    📍 {{ temple.location }}
+                </p>
+
+                <p class="text-gray-300 mt-4 line-clamp-3">
+                    {{ temple.description|truncatewords:50 }}
+                </p>
+
+                <a href="{% url 'temple_detail' temple.id %}" class="mt-6 inline-block w-full text-center bg-yellow-500
+                      text-black font-semibold py-2 rounded-xl
+                      hover:bg-yellow-400 transition">
+                    View Details
+                </a>
             </div>
         </div>
         {% empty %}
@@ -61,4 +273,74 @@
     </div>
 
 </section>
+
+<script>
+(function () {
+    const stateFilter = document.getElementById('state-filter');
+    const seen = new Set();
+    Array.from(stateFilter.options).forEach(opt => {
+        if (!opt.value) return;
+        const key = opt.value.trim().toLowerCase();
+        if (seen.has(key)) opt.remove(); else seen.add(key);
+    });
+
+    const searchEl  = document.getElementById('search-input');
+    const stateEl   = document.getElementById('state-filter');
+    const statusEl  = document.getElementById('status-filter');
+    const clearBtn  = document.getElementById('clear-btn');
+    const pillsEl   = document.getElementById('yp-pills');
+    const noResults = document.getElementById('no-results');
+
+    const STATUS_META = {
+        completed:   { label: 'Visited',    color: '#4ade80' },
+        planned:     { label: 'Planned',    color: '#60a5fa' },
+        not_visited: { label: 'Not Visited',color: '#f87171' },
+    };
+
+    function run() {
+        const q      = searchEl.value.toLowerCase().trim();
+        const state  = stateEl.value.toLowerCase();
+        const status = statusEl.value;
+        let visible  = 0;
+
+        document.querySelectorAll('.temple-card').forEach(card => {
+            const match = (!q      || card.dataset.name.includes(q))
+                       && (!state  || card.dataset.location.includes(state))
+                       && (!status || card.dataset.status === status);
+            card.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+
+        noResults.classList.toggle('hidden', visible > 0);
+        renderPills(q, stateEl.value, status);
+        const active = q || state || status;
+        clearBtn.style.opacity = active ? '1' : '0.5';
+        clearBtn.style.color   = active ? '#facc15' : 'rgba(250,204,21,0.45)';
+    }
+
+    function renderPills(q, state, status) {
+        pillsEl.innerHTML = '';
+        if (q)      addPill(`"${q}"`,            '#facc15', () => { searchEl.value = ''; run(); });
+        if (state)  addPill(state,               '#facc15', () => { stateEl.value  = ''; run(); });
+        if (status) addPill(STATUS_META[status].label, STATUS_META[status].color, () => { statusEl.value = ''; run(); });
+    }
+
+    function addPill(label, color, onRemove) {
+        const span = document.createElement('span');
+        span.className = 'yp-pill';
+        span.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${color};box-shadow:0 0 5px ${color}60;flex-shrink:0;"></span>${label}<button class="yp-pill-x" aria-label="Remove filter">&#x2715;</button>`;
+        span.querySelector('button').addEventListener('click', onRemove);
+        pillsEl.appendChild(span);
+    }
+
+    window.clearFilters = function () {
+        searchEl.value = ''; stateEl.value = ''; statusEl.value = '';
+        run();
+    };
+
+    searchEl.addEventListener('input',  run);
+    stateEl.addEventListener('change',  run);
+    statusEl.addEventListener('change', run);
+})();
+</script>
 {% endblock %}

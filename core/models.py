@@ -45,3 +45,14 @@ class Blog(models.Model):
 
     def __str__(self):
         return self.title"""
+
+
+class PushSubscription(models.Model):
+    """Stores browser push subscriptions."""
+    endpoint = models.TextField(unique=True)
+    p256dh   = models.TextField()
+    auth     = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.endpoint[:60]

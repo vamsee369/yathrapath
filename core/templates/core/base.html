@@ -123,9 +123,25 @@
                 </a>
             </div>
 
+            <!-- Bell (desktop) -->
+            <button id="bell-btn"
+                title="Enable notifications"
+                class="hidden md:flex items-center justify-center w-9 h-9 rounded-full text-yellow-400 hover:bg-white/10 transition text-xl"
+                aria-label="Notifications">
+                🔔
+            </button>
+
             <!-- Hamburger (ONLY MOBILE) -->
             <button id="menu-btn" class="md:hidden text-white text-2xl">
                 ☰
+            </button>
+
+            <!-- Bell (mobile) -->
+            <button id="bell-btn-mobile"
+                title="Enable notifications"
+                class="md:hidden text-yellow-400 text-xl"
+                aria-label="Notifications">
+                🔔
             </button>
         </div>
 
@@ -360,6 +376,210 @@
             }
         });
     </script>
+
+    <!-- ── Service Worker + Push Notifications ── -->
+    <script>
+    (function () {
+        if (!('serviceWorker' in navigator)) return;
+
+        // Register SW from root scope so it covers the whole site
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(reg => console.log('[SW] registered', reg.scope))
+            .catch(err => console.warn('[SW] registration failed', err));
+
+        // ── Push bell button logic ──
+        const bellBtns = [
+            document.getElementById('bell-btn'),
+            document.getElementById('bell-btn-mobile'),
+        ].filter(Boolean);
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const raw = atob(base64);
+            return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+        }
+
+        async function updateBellUI() {
+            if (!('PushManager' in window)) return;
+            const perm = Notification.permission;
+            const reg  = await navigator.serviceWorker.ready;
+            const sub  = await reg.pushManager.getSubscription();
+
+            bellBtns.forEach(btn => {
+                if (perm === 'denied') {
+                    btn.textContent = '🔕';
+                    btn.title = 'Notifications blocked — see instructions below';
+                    btn.style.opacity = '0.4';
+                } else if (sub) {
+                    btn.textContent = '🔔';
+                    btn.title = 'Notifications ON — click to disable';
+                    btn.style.opacity = '1';
+                } else {
+                    btn.textContent = '🔔';
+                    btn.title = 'Enable notifications';
+                    btn.style.opacity = '0.6';
+                }
+            });
+        }
+
+        function showPermissionHelp() {
+            // Detect browser for tailored instructions
+            const ua = navigator.userAgent;
+            let steps = '';
+            if (/Chrome/.test(ua) && !/Edg/.test(ua)) {
+                steps = `<b>Chrome:</b><br>
+                  1. Click the 🔒 lock icon in the address bar<br>
+                  2. Find <b>Notifications</b> → set to <b>Allow</b><br>
+                  3. Reload the page, then click 🔔 again`;
+            } else if (/Firefox/.test(ua)) {
+                steps = `<b>Firefox:</b><br>
+                  1. Click the 🔒 lock icon → <b>Connection Secure</b><br>
+                  2. Click <b>More Information</b> → <b>Permissions</b> tab<br>
+                  3. Find <b>Receive Notifications</b> → uncheck "Use Default" → select <b>Allow</b><br>
+                  4. Reload the page, then click 🔔 again`;
+            } else if (/Edg/.test(ua)) {
+                steps = `<b>Edge:</b><br>
+                  1. Click the 🔒 lock icon in the address bar<br>
+                  2. Click <b>Permissions for this site</b><br>
+                  3. Set <b>Notifications</b> to <b>Allow</b><br>
+                  4. Reload the page, then click 🔔 again`;
+            } else if (/Safari/.test(ua)) {
+                steps = `<b>Safari:</b><br>
+                  1. Go to <b>Safari → Settings for This Website</b><br>
+                  2. Set <b>Notifications</b> to <b>Allow</b><br>
+                  3. Reload the page, then click 🔔 again`;
+            } else {
+                steps = `1. Open your browser's <b>site settings</b> for this page<br>
+                  2. Find <b>Notifications</b> and set it to <b>Allow</b><br>
+                  3. Reload the page, then click 🔔 again`;
+            }
+
+            // Remove existing modal if any
+            document.getElementById('notif-help-modal')?.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'notif-help-modal';
+            modal.style.cssText = `
+                position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:99999;
+                display:flex; align-items:center; justify-content:center; padding:1.5rem;
+            `;
+            modal.innerHTML = `
+                <div style="background:#1c1c1c; border:1px solid rgba(255,255,255,.15);
+                     border-radius:1.25rem; padding:2rem; max-width:420px; width:100%;
+                     box-shadow:0 8px 40px rgba(0,0,0,.6); color:#fff; font-family:Poppins,sans-serif;">
+                    <div style="font-size:2rem; margin-bottom:.5rem;">🔕</div>
+                    <h2 style="color:#eab308; font-size:1.2rem; margin:0 0 .75rem;">
+                        Notifications are blocked
+                    </h2>
+                    <p style="color:#9ca3af; font-size:.9rem; margin:0 0 1rem; line-height:1.6;">
+                        You previously blocked notifications for this site.
+                        Here's how to re-enable them:
+                    </p>
+                    <div style="background:#111; border-radius:.75rem; padding:1rem;
+                         font-size:.875rem; line-height:1.8; color:#d1d5db;">
+                        ${steps}
+                    </div>
+                    <button onclick="document.getElementById('notif-help-modal').remove()"
+                        style="margin-top:1.25rem; width:100%; padding:.75rem;
+                               background:#eab308; color:#000; border:none; border-radius:.75rem;
+                               font-weight:600; font-size:1rem; cursor:pointer;">
+                        Got it
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', e => {
+                if (e.target === modal) modal.remove();
+            });
+        }
+
+        async function togglePush() {
+            if (!('PushManager' in window) || !('Notification' in window)) {
+                showToast('⚠️ Push notifications are not supported in this browser.');
+                return;
+            }
+
+            // Already denied — show step-by-step instructions
+            if (Notification.permission === 'denied') {
+                showPermissionHelp();
+                return;
+            }
+
+            const reg = await navigator.serviceWorker.ready;
+            const existing = await reg.pushManager.getSubscription();
+
+            if (existing) {
+                await existing.unsubscribe();
+                await fetch('/push/unsubscribe/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ endpoint: existing.endpoint }),
+                });
+                updateBellUI();
+                showToast('🔕 Notifications disabled');
+                return;
+            }
+
+            // Request permission (only possible when state is 'default')
+            const permission = await Notification.requestPermission();
+            if (permission === 'denied') {
+                showPermissionHelp();
+                return;
+            }
+            if (permission !== 'granted') {
+                showToast('🔔 Permission not granted — try again.');
+                return;
+            }
+
+            // Fetch VAPID public key
+            let vapidKey = '';
+            try {
+                const resp = await fetch('/push/vapid-key/');
+                const json = await resp.json();
+                vapidKey = json.publicKey;
+            } catch (_) {}
+
+            if (!vapidKey) {
+                showToast('⚙️ Push not configured yet — add VAPID keys to .env');
+                return;
+            }
+
+            // Subscribe
+            const sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidKey),
+            });
+
+            await fetch('/push/subscribe/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(sub.toJSON()),
+            });
+
+            updateBellUI();
+            showToast('🔔 Notifications enabled!');
+        }
+
+        function showToast(msg) {
+            const el = document.createElement('div');
+            el.textContent = msg;
+            el.style.cssText = `
+                position:fixed; bottom:2rem; left:50%; transform:translateX(-50%);
+                background:#1c1c1c; color:#fff; padding:.75rem 1.5rem;
+                border-radius:999px; font-size:.9rem; z-index:9999;
+                border:1px solid rgba(255,255,255,.15); box-shadow:0 4px 20px rgba(0,0,0,.4);
+                transition:opacity .4s;
+            `;
+            document.body.appendChild(el);
+            setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 3000);
+        }
+
+        bellBtns.forEach(btn => btn.addEventListener('click', togglePush));
+        updateBellUI();
+    })();
+    </script>
 </body>
+
 
 </html>
