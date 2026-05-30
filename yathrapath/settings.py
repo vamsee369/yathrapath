@@ -89,13 +89,13 @@ USE_TZ = True
 
 # ── Static & Media ───────────────────────────────────
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / "core/static"]
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_URL = '/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['map', 'avif']
+WHITENOISE_USE_FINDERS = True
 
 # ── Storage ──────────────────────────────────────────
 STORAGES = {
@@ -106,7 +106,6 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 # ── Cloudinary ───────────────────────────────────────
