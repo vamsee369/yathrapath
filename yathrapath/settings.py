@@ -105,7 +105,7 @@ STORAGES = {
     },
 }
 
-# Required by django-cloudinary-storage 0.3.0 (not yet updated for Django 4.2+)
+# Required by django-cloudinary-storage 0.3.0 (not updated for Django 4.2+)
 STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 # ── Cloudinary ───────────────────────────────────────
