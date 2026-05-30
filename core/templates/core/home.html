@@ -9,7 +9,7 @@
         <div class="w-full">
 
             <!-- Heading -->
-            <h2 class="text-4xl font-bold text-center text-yellow-400 font-[Playfair_Display] mb-14">
+            <h2 class="text-3xl font-bold text-center text-white-400 font-[Playfair_Display] mb-14">
                 ✧ About YathraPath ✧
             </h2>
 
@@ -111,7 +111,7 @@
             {% for temple in temples %}
             <div
                 class="w-72 backdrop-blur-xl bg-white/10 p-6 rounded-2xl shadow-xl border border-white/20 hover:scale-105 transition duration-500">
-                <img src="{% static 'images/temples/' %}{{ temple.image.name|cut:'temples/' }}" alt="{{ temple.name }}"
+                <img src="{{ temple.image.url }}" alt="{{ temple.name }}"
                     class="rounded-xl h-48 w-full object-cover mb-4">
 
                 <h3 class="text-2xl font-semibold text-orange-400 mb-2">

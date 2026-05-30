@@ -9,3 +9,4 @@ media/
 staticfiles/
 node_modules/
 .DS_Store
+data_backup.json
