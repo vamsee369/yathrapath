@@ -25,8 +25,8 @@ def _send_to_all(payload):
                 vapid_private_key=settings.VAPID_PRIVATE_KEY,
                 vapid_claims=settings.VAPID_CLAIMS,
                 headers={
-                    "Urgency": "high",
-                    "TTL": "86400",
+                    "Urgency": "high",   # ← critical: wakes device even with screen off
+                    "TTL": "86400",      # ← deliver within 24h if device is offline
                 }
             )
         except WebPushException as e:
@@ -57,6 +57,18 @@ class Temple(models.Model):
                     max_length=20,
                     choices=STATUS_CHOICES,
                     default='not_visited'
+                  )
+    category    = models.CharField(
+                    max_length=20,
+                    choices=[
+                        ('temple',   'Temple / Religious'),
+                        ('mountain', 'Mountain / Hill'),
+                        ('beach',    'Beach / Coastal'),
+                        ('scenic',   'Scenic / Nature'),
+                        ('heritage', 'Heritage / Historical'),
+                        ('other',    'Other'),
+                    ],
+                    default='temple'
                   )
 
     def __str__(self):

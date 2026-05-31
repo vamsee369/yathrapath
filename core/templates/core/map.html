@@ -1,98 +1,320 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-<div class="relative w-full h-screen">
-    <!-- Full-screen map -->
-    <div id="map" class="w-full h-full z-0"></div>
+
+<style>
+    /* ── Full screen fix ── */
+    html, body { height: 100%; margin: 0; padding: 0; }
+
+    #map-wrapper {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1;
+    }
+
+    #map {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* ── Legend ── */
+    #map-legend {
+        position: fixed;
+        bottom: 2rem;
+        left: 1rem;
+        z-index: 999;
+        background: rgba(10,10,20,0.88);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 1rem;
+        padding: 1rem 1.25rem;
+        color: #fff;
+        font-family: Poppins, sans-serif;
+        min-width: 180px;
+        transition: all 0.3s ease;
+    }
+
+    /* ── Legend toggle button (mobile only) ── */
+    #legend-toggle {
+        display: none;
+        position: fixed;
+        bottom: 1.2rem;
+        left: 1rem;
+        z-index: 1000;
+        background: rgba(10,10,20,0.9);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 999px;
+        padding: 6px 14px;
+        color: #facc15;
+        font-size: 12px;
+        font-family: Poppins, sans-serif;
+        cursor: pointer;
+        font-weight: 600;
+        letter-spacing: .05em;
+    }
+
+    @media (max-width: 640px) {
+        #legend-toggle { display: block; }
+        #map-legend {
+            bottom: 3.5rem;
+            display: none;         /* hidden by default on mobile */
+            min-width: 160px;
+        }
+        #map-legend.open { display: block; }
+    }
+
+    /* ── Pin marker shape ── */
+    .yp-pin {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+    }
+    .yp-pin-head {
+        width: 26px; height: 26px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    }
+    .yp-pin-head span {
+        transform: rotate(45deg);
+        font-size: 12px;
+        line-height: 1;
+    }
+    .yp-pin-tail {
+        width: 2px;
+        height: 8px;
+        margin-top: -1px;
+        opacity: 0.7;
+    }
+
+    /* ── Popup ── */
+    .yp-popup .leaflet-popup-content-wrapper {
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        border-radius: 16px !important;
+    }
+    .yp-popup .leaflet-popup-content {
+        margin: 0 !important;
+        border-radius: 16px !important;
+        overflow: hidden;
+    }
+    .yp-popup .leaflet-popup-tip-container { display: none; }
+
+    /* ── State tooltip ── */
+    .state-label {
+        background: rgba(10,10,20,0.8);
+        border: 1px solid rgba(255,255,255,0.15);
+        color: #fff;
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-family: Poppins, sans-serif;
+    }
+</style>
+
+<!-- Full screen map wrapper -->
+<div id="map-wrapper">
+    <div id="map"></div>
+
+    <!-- Legend -->
+    <div id="map-legend">
+        <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#facc15;margin:0 0 .75rem;font-weight:600;">
+            Map Legend
+        </p>
+        <p style="font-size:10px;color:#9ca3af;margin:0 0 .4rem;letter-spacing:.08em;">PLACE TYPE</p>
+        <div style="display:flex;flex-direction:column;gap:.3rem;margin-bottom:.8rem;font-size:12px;">
+            <span>🛕 Temple / Religious</span>
+            <span>⛰️ Mountain / Hill</span>
+            <span>🏖️ Beach / Coastal</span>
+            <span>🌿 Scenic / Nature</span>
+            <span>🏛️ Heritage / Historical</span>
+            <span>📍 Other</span>
+        </div>
+        <p style="font-size:10px;color:#9ca3af;margin:0 0 .4rem;letter-spacing:.08em;">VISIT STATUS</p>
+        <div style="display:flex;flex-direction:column;gap:.3rem;font-size:12px;">
+            <span style="display:flex;align-items:center;gap:.4rem;">
+                <span style="width:9px;height:9px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 5px #22c55e;"></span> Visited
+            </span>
+            <span style="display:flex;align-items:center;gap:.4rem;">
+                <span style="width:9px;height:9px;border-radius:50%;background:#3b82f6;flex-shrink:0;box-shadow:0 0 5px #3b82f6;"></span> Planned
+            </span>
+            <span style="display:flex;align-items:center;gap:.4rem;">
+                <span style="width:9px;height:9px;border-radius:50%;background:#ef4444;flex-shrink:0;box-shadow:0 0 5px #ef4444;"></span> Not Visited
+            </span>
+        </div>
+    </div>
+
+    <!-- Mobile legend toggle button -->
+    <button id="legend-toggle">🗺 Legend</button>
 </div>
 
-<!-- Script to polish navbar only for map page -->
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const navbar = document.getElementById("navbar");
+document.addEventListener("DOMContentLoaded", function () {
 
-        if (navbar) {
-            // Make it fixed and above everything
-            navbar.classList.add(
-                "fixed", "top-6", "left-1/2", "-translate-x-1/2",
-                "z-[999]", "pointer-events-auto"
-            );
+    // ── Navbar above map ──────────────────────────────────
+    const navbar = document.getElementById("navbar");
+    if (navbar) {
+        navbar.style.zIndex = "1000";
+        navbar.style.pointerEvents = "auto";
+    }
 
-
-        }
-    });
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-
-        var map = L.map('map').setView([20.5937, 78.9629], 5);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        var markers = [];
-
-        // Custom Icons
-        var greenIcon = new L.Icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
+    // ── Mobile legend toggle ──────────────────────────────
+    const legendToggle = document.getElementById('legend-toggle');
+    const legend       = document.getElementById('map-legend');
+    if (legendToggle) {
+        legendToggle.addEventListener('click', function() {
+            legend.classList.toggle('open');
+            legendToggle.textContent = legend.classList.contains('open') ? '✕ Close' : '🗺 Legend';
         });
+    }
 
-        var redIcon = new L.Icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
+    // ── Map init ──────────────────────────────────────────
+    var map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // ── Dark tile layer (CartoDB — free, no key) ──────────
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20,
+    }).addTo(map);
+
+    // ── State borders (deep red, fallback chain) ──────────
+    const BORDER_STYLE = { color: '#ca8a04', weight: 1.5, opacity: 0.3, fillOpacity: 0 };
+
+    const geoSources = [
+        'https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson',
+        'https://raw.githubusercontent.com/datameet/maps/master/States/Admin2.geojson',
+        'https://raw.githubusercontent.com/Arun-George-Zachariah/India-State-Boundary-GeoJson/master/india_state.geojson',
+    ];
+
+    function tryLoadBorders(i) {
+        if (i >= geoSources.length) { console.log('[Map] All border sources failed'); return; }
+        fetch(geoSources[i])
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(data => {
+                L.geoJSON(data, {
+                    style: BORDER_STYLE,
+                    onEachFeature: function(feat, layer) {
+                        const n = feat.properties && (feat.properties.NAME_1 || feat.properties.name || feat.properties.ST_NM);
+                        if (n) layer.bindTooltip(n, { permanent: false, className: 'state-label' });
+                    }
+                }).addTo(map);
+            })
+            .catch(() => tryLoadBorders(i + 1));
+    }
+    tryLoadBorders(0);
+
+    // ── Pin-shaped emoji markers ──────────────────────────
+    const STATUS_COLOR = {
+        'completed':   '#22c55e',
+        'planned':     '#3b82f6',
+        'not_visited': '#ef4444',
+    };
+
+    const CATEGORY_EMOJI = {
+        'temple':   '🛕',
+        'mountain': '⛰️',
+        'beach':    '🏖️',
+        'scenic':   '🌿',
+        'heritage': '🏛️',
+        'other':    '📍',
+    };
+
+    function makePinIcon(category, status) {
+        const emoji = CATEGORY_EMOJI[category] || '📍';
+        const color = STATUS_COLOR[status]      || '#ef4444';
+        return L.divIcon({
+            className: '',
+            html: `
+                <div class="yp-pin">
+                    <div class="yp-pin-head" style="
+                        background: ${color}28;
+                        border: 2px solid ${color}cc;
+                        box-shadow: 0 0 10px ${color}55, inset 0 0 8px ${color}18;
+                    ">
+                        <span>${emoji}</span>
+                    </div>
+                    <div class="yp-pin-tail" style="background:${color}cc;"></div>
+                </div>`,
+            iconSize:    [26, 37],
+            iconAnchor:  [13, 37],
+            popupAnchor: [0, -39],
         });
+    }
 
-        var blueIcon = new L.Icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
-
+    // ── Temple data ───────────────────────────────────────
+    const temples = [
         {% for temple in all_temples %}
-        var icon;
+        {
+            name:        "{{ temple.name|escapejs }}",
+            location:    "{{ temple.location|escapejs }}",
+            description: "{{ temple.description|truncatechars:120|escapejs }}",
+            image:       "{{ temple.image.url }}",
+            url:         "{% url 'temple_detail' temple.id %}",
+            lat:         {{ temple.latitude }},
+            lng:         {{ temple.longitude }},
+            status:      "{{ temple.status }}",
+            category:    "{{ temple.category }}",
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
 
-        {% if temple.status == "completed" %}
-        icon = greenIcon;
-        {% elif temple.status == "planned" %}
-        icon = blueIcon;
-        {% else %}
-        icon = redIcon;
-        {% endif %}
+    // ── Markers + popups ──────────────────────────────────
+    const statusLabel = { completed:'✅ Visited', planned:'🔵 Planned', not_visited:'🔴 Not Visited' };
+    var markers = [];
 
-        var marker = L.marker(
-            [{{ temple.latitude }}, {{ temple.longitude }}],
-        { icon: icon }
-    )
-        .addTo(map)
-        .bindPopup(`
-            <div style="text-align:center;">
-                <strong>{{ temple.name }}</strong><br>
-                {{ temple.location }}<br>
-                <em>Status: {{ temple.status }}</em>
-            </div>
-        `);
+    temples.forEach(function(t) {
+        const color = STATUS_COLOR[t.status] || '#ef4444';
+        const emoji = CATEGORY_EMOJI[t.category] || '📍';
+        const label = statusLabel[t.status] || t.status;
 
-    markers.push(marker);
-    {% endfor %}
+        const popup = `
+            <div style="width:240px;background:rgba(10,10,20,0.96);
+                border:1px solid rgba(255,255,255,0.12);border-radius:16px;
+                overflow:hidden;font-family:Poppins,sans-serif;
+                box-shadow:0 8px 32px rgba(0,0,0,0.7);">
+                ${t.image ? `<div style="width:100%;height:130px;overflow:hidden;">
+                    <img src="${t.image}" style="width:100%;height:100%;object-fit:cover;"
+                         onerror="this.parentElement.style.display='none'">
+                </div>` : ''}
+                <div style="padding:12px 14px 14px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                        <span style="font-size:18px;">${emoji}</span>
+                        <span style="font-size:10px;padding:3px 9px;border-radius:999px;
+                            background:${color}22;border:1px solid ${color}66;
+                            color:${color};font-weight:500;">${label}</span>
+                    </div>
+                    <h3 style="margin:0 0 3px;font-size:15px;font-weight:700;color:#fff;line-height:1.3;">${t.name}</h3>
+                    <p style="margin:0 0 8px;font-size:11px;color:#9ca3af;">📍 ${t.location}</p>
+                    <p style="margin:0 0 12px;font-size:11.5px;color:#d1d5db;line-height:1.6;">${t.description}</p>
+                    <a href="${t.url}" style="display:block;text-align:center;padding:7px 0;
+                        border-radius:10px;background:linear-gradient(135deg,#f59e0b,#d97706);
+                        color:#000;font-size:12px;font-weight:700;text-decoration:none;">
+                        View Details →
+                    </a>
+                </div>
+            </div>`;
+
+        var marker = L.marker([t.lat, t.lng], { icon: makePinIcon(t.category, t.status) })
+            .addTo(map)
+            .bindPopup(popup, { maxWidth: 260, className: 'yp-popup' });
+
+        markers.push(marker);
+    });
 
     if (markers.length > 0) {
         var group = new L.featureGroup(markers);
-        map.fitBounds(group.getBounds().pad(0.2));
+        map.fitBounds(group.getBounds().pad(0.25));
     }
-
 });
 </script>
+
 {% endblock %}
