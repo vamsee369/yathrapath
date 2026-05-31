@@ -1,18 +1,23 @@
 /* =========================================================
-   YatraPath Service Worker — v2 (Offline PWA + Push)
+   YatraPath Service Worker — v3 (Offline PWA + Push)
    ========================================================= */
 
-const CACHE_NAME = 'yathrapath-v2';
+const CACHE_NAME = 'yathrapath-v3';
 
 // Core pages/assets to pre-cache for offline use
 const PRECACHE_URLS = [
   '/',
-  '/temples/',
-  '/blog/',
-  '/map/',
   '/static/css/output.css',
   '/static/manifest.json',
   '/offline.html',
+];
+
+// These pages always fetch fresh from network (never serve from cache)
+const NETWORK_FIRST = [
+  '/temples/',
+  '/blog/',
+  '/map/',
+  '/temple/',   // detail pages  
 ];
 
 // ── Install ───────────────────────────────────────────────
@@ -37,30 +42,61 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// ── Fetch (Cache-first, fallback to network) ──────────────
+// ── Fetch ─────────────────────────────────────────────────
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-  if (event.request.url.includes('/admin/')) return;
 
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
+  const url = new URL(event.request.url);
 
-      return fetch(event.request)
+  // Always skip admin
+  if (url.pathname.startsWith('/admin/')) return;
+
+  // Network-first for dynamic pages — always get fresh content
+  const isDynamic = NETWORK_FIRST.some(path => url.pathname.startsWith(path))
+                 || url.pathname === '/';
+
+  if (isDynamic) {
+    event.respondWith(
+      fetch(event.request)
         .then(response => {
-          if (response && response.status === 200 && response.type === 'basic') {
+          // Update cache with fresh response
+          if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           }
           return response;
         })
         .catch(() => {
-          // Offline fallback for navigation requests
-          if (event.request.mode === 'navigate') {
-            return caches.match('/offline.html') || caches.match('/');
+          // Only fall back to cache when truly offline
+          return caches.match(event.request)
+              || caches.match('/offline.html');
+        })
+    );
+    return;
+  }
+
+  // Cache-first for static assets (CSS, JS, images, fonts)
+  if (url.pathname.startsWith('/static/')) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        return cached || fetch(event.request).then(response => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           }
+          return response;
         });
-    })
+      })
+    );
+    return;
+  }
+
+  // Everything else — network first, fall back to cache
+  event.respondWith(
+    fetch(event.request)
+      .then(response => response)
+      .catch(() => caches.match(event.request)
+                || caches.match('/offline.html'))
   );
 });
 
