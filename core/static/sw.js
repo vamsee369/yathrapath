@@ -2,7 +2,7 @@
    YatraPath Service Worker — v3 (Offline PWA + Push)
    ========================================================= */
 
-const CACHE_NAME = 'yathrapath-v3';
+const CACHE_NAME = 'yathrapath-v4';
 
 // Core pages/assets to pre-cache for offline use
 const PRECACHE_URLS = [
@@ -108,13 +108,23 @@ self.addEventListener('push', event => {
     data = JSON.parse(event.data.text());
   } catch (_) {}
 
+  // keepalive: event.waitUntil keeps the SW alive until notification is shown
   event.waitUntil(
     self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/static/images/icons/icon-192.png',
-      badge: '/static/images/icons/icon-192.png',
-      data: { url: data.url },
-      vibrate: [100, 50, 100],
+      body:             data.body,
+      icon:             '/static/images/icons/icon-512.png',   // larger = better on Android
+      badge:            '/static/images/icons/icon-192.png',   // small monochrome icon in status bar
+      data:             { url: data.url },
+      vibrate:          [200, 100, 200, 100, 200],             // stronger pattern = wakes screen
+      requireInteraction: true,                                 // ← stays visible until user taps (Android/desktop)
+      tag:              data.url || 'yathrapath',              // ← replaces old notification (no spam)
+      renotify:         true,                                   // ← re-alerts even if same tag exists
+      silent:           false,                                  // ← explicitly NOT silent
+      timestamp:        Date.now(),
+      actions: [
+        { action: 'open',    title: '👁️ View' },
+        { action: 'dismiss', title: '✖ Dismiss' },
+      ],
     })
   );
 });
@@ -122,13 +132,23 @@ self.addEventListener('push', event => {
 // ── Notification Click ────────────────────────────────────
 self.addEventListener('notificationclick', event => {
   event.notification.close();
+
+  // Handle action buttons
+  if (event.action === 'dismiss') return;
+
   const url = event.notification.data?.url || '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(wins => {
+      // If app already open, focus it and navigate
       for (const win of wins) {
-        if (win.url === url && 'focus' in win) return win.focus();
+        if ('focus' in win) {
+          win.focus();
+          win.navigate?.(url);
+          return;
+        }
       }
+      // Otherwise open a new window
       if (clients.openWindow) return clients.openWindow(url);
     })
   );
