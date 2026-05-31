@@ -117,8 +117,8 @@ self.addEventListener('push', event => {
       data:             { url: data.url },
       vibrate:          [200, 100, 200, 100, 200],             // stronger pattern = wakes screen
       requireInteraction: true,                                 // ← stays visible until user taps (Android/desktop)
-      tag:              data.url || 'yathrapath',              // ← replaces old notification (no spam)
-      renotify:         true,                                   // ← re-alerts even if same tag exists
+      tag:              'yathrapath-' + Date.now(),             // ← unique per notification = each one rings
+      renotify:         true,                                   // ← always alert regardless of tag
       silent:           false,                                  // ← explicitly NOT silent
       timestamp:        Date.now(),
       actions: [
