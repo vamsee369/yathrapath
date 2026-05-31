@@ -575,8 +575,30 @@
             setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 3000);
         }
 
-        bellBtns.forEach(btn => btn.addEventListener('click', togglePush));
+bellBtns.forEach(btn => btn.addEventListener('click', togglePush));
         updateBellUI();
+
+        async function ensureSubscription() {
+            if (Notification.permission !== 'granted') return;
+            const reg = await navigator.serviceWorker.ready;
+            let sub = await reg.pushManager.getSubscription();
+            if (!sub) {
+                const keyRes = await fetch('/push/vapid-key/');
+                const { publicKey } = await keyRes.json();
+                sub = await reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(publicKey)
+                });
+                await fetch('/push/subscribe/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sub.toJSON())
+                });
+                console.log('[Push] Re-subscribed silently ✅');
+            }
+        }
+
+        navigator.serviceWorker.ready.then(() => ensureSubscription());
     })();
     </script>
 </body>

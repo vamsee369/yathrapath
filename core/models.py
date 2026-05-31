@@ -23,12 +23,18 @@ def _send_to_all(payload):
                 },
                 data=json.dumps(payload),
                 vapid_private_key=settings.VAPID_PRIVATE_KEY,
-                vapid_claims=settings.VAPID_CLAIMS
+                vapid_claims=settings.VAPID_CLAIMS,
+                headers={
+                    "Urgency": "high",
+                    "TTL": "86400",
+                }
             )
         except WebPushException as e:
             print(f"[Push] Failed for {sub.endpoint[:40]}… → {e}")
+            sub.delete()
         except Exception as e:
             print(f"[Push] Unexpected error → {e}")
+            sub.delete()
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
