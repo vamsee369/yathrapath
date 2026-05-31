@@ -161,6 +161,60 @@
         {% block content %}
         {% endblock %}
     </main>
+
+    <!-- ── YathraPath Footer ─────────────────────────────────────────────── -->
+    {% if request.path != '/map/' %}
+    <footer class="relative z-10 w-full" style="margin-top:6rem;">
+
+        <!-- thin gold divider line -->
+        <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(250, 204, 21, 0.913),transparent);"></div>
+
+        <div class="max-w-7xl mx-auto px-8 py-14">
+
+            <!-- Main 3-col grid — matches screenshot layout exactly -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 w-full">
+
+                <!-- LEFT — Brand -->
+                <div class="flex flex-col gap-4">
+                    <a href="{% url 'home' %}" class="flex items-center gap-2 w-fit">
+                        <span class="text-xl font-bold text-yellow-400 font-[Playfair_Display]">YathraPath</span>
+                        <img src="{% static 'images/favicon.ico' %}?v=2" class="w-5 h-5 opacity-80">
+                    </a>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        "Travel beyond destinations—discover nature, culture, and yourself."
+                    </p>
+                </div>
+
+                <!-- MIDDLE — Explore -->
+                <div class="flex flex-col gap-3">
+                    <h4 class="text-xs font-semibold tracking-[0.18em] uppercase text-yellow-400/60 mb-1 font-[Poppins]">Explore</h4>
+                    <a href="{% url 'home' %}" class="text-gray-400 text-sm hover:text-yellow-400 transition duration-200 font-[Poppins]">Home</a>
+                    <a href="{% url 'temples' %}" class="text-gray-400 text-sm hover:text-yellow-400 transition duration-200 font-[Poppins]">Destinations</a>
+                    <a href="{% url 'map' %}" class="text-gray-400 text-sm hover:text-yellow-400 transition duration-200 font-[Poppins]">Interactive Map</a>
+                    <a href="{% url 'blog' %}" class="text-gray-400 text-sm hover:text-yellow-400 transition duration-200 font-[Poppins]">Blog</a>
+                </div>
+
+                <!-- RIGHT — Tools -->
+                <div class="flex flex-col gap-3">
+                    <h4 class="text-xs font-semibold tracking-[0.18em] uppercase text-yellow-400/60 mb-1 font-[Poppins]">Tools</h4>
+                    <a href="{% url 'route_planner' %}" class="text-gray-400 text-sm hover:text-yellow-400 transition duration-200 font-[Poppins]">Route Planner</a>
+                    <a href="https://tripexpensetracker.onrender.com/" target="_blank" rel="noopener" class="text-gray-400 text-sm hover:text-yellow-400 transition duration-200 font-[Poppins]">Expense Tracker ↗</a>
+                    <a href="{% url 'map' %}" class="text-gray-400 text-sm hover:text-yellow-400 transition duration-200 font-[Poppins]">Live Map</a>
+                </div>
+
+            </div>
+
+            <!-- Bottom bar — thin line + copyright -->
+            <div style="height:1px;background:rgba(255,255,255,0.06);margin-top:3rem;margin-bottom:1.5rem;"></div>
+            <p class="text-center text-gray-600 text-xs font-[Poppins] tracking-wide">
+                &copy; {% now "Y" %} YathraPath — Every path tells a story, every journey reveals a new horizon.
+            </p>
+
+        </div>
+
+    </footer>
+    {% endif %}
+    <!-- ── End Footer ─────────────────────────────────────────────────────── -->
     <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
     <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
     <script>

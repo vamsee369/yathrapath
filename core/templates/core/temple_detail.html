@@ -1,27 +1,666 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% block content %}
-<div class="min-h-screen flex items-center justify-center px-6 py-32">
 
-    <div class="max-w-5xl w-full backdrop-blur-xl bg-white/10 p-10 rounded-3xl shadow-2xl border border-white/20">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@400;600;900&display=swap" rel="stylesheet">
 
-        <img src="{{ temple.image.url }}"
-            class="rounded-2xl w-full max-h-[600px] object-contain bg-black mb-8">
+<style>
+:root {
+  --gold:   #c9963a;
+  --amber:  #e8a045;
+  --glow:   #f0b85a;
+  --dark:   #0a0806;
+  --surface:#111009;
+  --card:   #16130d;
+  --border: rgba(201,150,58,0.18);
+  --text:   #e8dcc8;
+  --muted:  #7a6e5e;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
 
-        <h1 class="text-4xl font-bold text-orange-400 mb-4">
-            {{ temple.name }}
-        </h1>
+/* ── Kill video bg, kill glow blobs, fix body ── */
+.video-container          { display:none !important; }
+body > .absolute          { display:none !important; }
+body {
+  background: var(--dark) !important;
+  color: var(--text);
+}
 
-        <h2 class="text-lg text-gray-300 mb-6">
-            📍 {{ temple.location }}
-        </h2>
+/* ── Fix main padding gap under navbar ── */
+main { padding-top: 0 !important; }
 
-        <div class="text-gray-200 leading-relaxed text-lg space-y-3">
-            {{ temple.description|linebreaksbr }}
-        </div>
+/* ── HERO ── */
+.hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  overflow:hidden;
+  margin-top:0;        /* flush to very top */
+}
+.hero-img{
+  position:absolute;
+  inset:0;
+  top:-1px;
+  width:100%;
+  height:calc(100% + 1px);
+  object-fit:cover;
+  object-position:center top;
+  filter:brightness(0.42) saturate(0.7);
+  transform-origin: center center;
+  animation: heroZoom 8s ease forwards;
+}
 
+@keyframes heroZoom {
+  from { transform: scale(1.08); }
+  to   { transform: scale(1.0);  }
+}
+.hero-gradient{
+  position:absolute;
+  inset:0;
+  top:-1px;
+  background:linear-gradient(
+    to bottom,
+    rgba(10,8,6,0.45) 0%,     /* darker at top to blend with navbar */
+    rgba(10,8,6,0.0)  20%,
+    rgba(10,8,6,0.5)  60%,
+    rgba(10,8,6,0.97) 100%
+  );
+}
+.hero-content{position:relative;z-index:2;padding:0 6vw 5rem;max-width:900px;}
+.back-link{display:inline-flex;align-items:center;gap:.5rem;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-decoration:none;margin-bottom:2rem;transition:color .2s;}
+.back-link:hover{color:var(--gold);}
+.category-pill{display:inline-block;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border);border-radius:999px;padding:4px 14px;margin-bottom:1.2rem;background:rgba(201,150,58,0.07);}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(3rem,7vw,6rem);font-weight:900;line-height:1;color:#fff;margin-bottom:1rem;text-shadow:0 4px 40px rgba(0,0,0,0.8);}
+.hero-location{display:flex;align-items:center;gap:.5rem;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--muted);margin-bottom:1.5rem;}
+.hero-desc{font-family:'DM Sans',sans-serif;font-size:17px;line-height:1.75;color:#c4b89a;max-width:600px;margin-bottom:2.5rem;}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;}
+.btn-primary{display:inline-flex;align-items:center;gap:.5rem;background:var(--gold);color:#0a0806;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.06em;padding:12px 24px;border-radius:999px;text-decoration:none;border:none;cursor:pointer;transition:background .2s,transform .2s;}
+.btn-primary:hover{background:var(--glow);transform:translateY(-1px);}
+.btn-ghost{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,0.06);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;letter-spacing:.06em;padding:12px 24px;border-radius:999px;text-decoration:none;border:1px solid rgba(255,255,255,0.12);cursor:pointer;transition:background .2s,transform .2s;}
+.btn-ghost:hover{background:rgba(255,255,255,0.1);transform:translateY(-1px);}
+.status-badge{position:absolute;top:2rem;right:2rem;z-index:10;display:flex;align-items:center;gap:.5rem;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:8px 16px;border-radius:999px;backdrop-filter:blur(12px);}
+.status-completed{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);color:#4ade80;}
+.status-planned{background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.4);color:#60a5fa;}
+.status-not_visited{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#f87171;}
+
+/* ── STATS ROW ── */
+.stats-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:1px;
+  background:var(--border);
+  border:1px solid var(--border);
+  border-radius:20px;
+  overflow:hidden;
+  margin:0 6vw;
+  position:relative;
+  z-index:3;
+  transform:translateY(-2.5rem);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+.stat-card{
+  background:var(--card);
+  padding:1.5rem 1.8rem;
+  transition:background .25s;
+  position:relative;
+  overflow:hidden;
+}
+.stat-card::before{
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,150,58,0.2),transparent);
+}
+.stat-card:hover{background:#1c180f;}
+.stat-label{
+  display:flex;
+  align-items:center;
+  gap:.4rem;
+  font-family:'DM Sans',sans-serif;
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:.6rem;
+  opacity:.8;
+}
+.stat-value{
+  font-family:'DM Sans',sans-serif;
+  font-size:13.5px;
+  color:var(--text);
+  line-height:1.5;
+  font-weight:400;
+}
+
+/* ── BODY ── */
+.body-wrap{max-width:860px;margin:0 auto;padding:0 6vw 8rem;}
+
+/* ── XP BAR ── */
+.xp-section{
+  background: linear-gradient(135deg, var(--card), #120f08);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:1.8rem 2.2rem;
+  margin-bottom:3rem;
+  position:relative;
+  overflow:hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(201,150,58,0.1);
+}
+.xp-section::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.xp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+.xp-title{font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);}
+.xp-points{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);}
+.xp-bar-track{height:6px;background:rgba(255,255,255,0.07);border-radius:999px;overflow:hidden;margin-bottom:.8rem;}
+.xp-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--glow));box-shadow:0 0 12px var(--gold);animation:xpFill 1.8s cubic-bezier(.25,1,.5,1) forwards;width:0%;}
+@keyframes xpFill{to{width:var(--xp-width);}}
+.xp-badges{display:flex;gap:.6rem;flex-wrap:wrap;}
+.xp-badge{font-family:'DM Sans',sans-serif;font-size:11px;padding:4px 10px;border-radius:999px;background:rgba(201,150,58,0.1);border:1px solid rgba(201,150,58,0.25);color:var(--gold);}
+
+/* ── BIG QUOTE ── */
+.big-quote{
+  position:relative;
+  padding:3.5rem 2.5rem 3.5rem 4rem;
+  margin:3rem 0;
+  border-left:2px solid var(--gold);
+  background: linear-gradient(90deg, rgba(201,150,58,0.04), transparent);
+  border-radius: 0 16px 16px 0;
+}
+.big-quote::before{
+  content:'\201C';
+  position:absolute;
+  top:-1.5rem;
+  left:1.2rem;
+  font-family:'Playfair Display',serif;
+  font-size:10rem;
+  line-height:1;
+  color:var(--gold);
+  opacity:.15;
+  pointer-events:none;
+}
+.big-quote p{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(1.5rem,3vw,2.2rem);
+  font-style:italic;
+  line-height:1.65;
+  color:#ede1ca;
+}
+.big-quote cite{
+  display:block;
+  margin-top:1.2rem;
+  font-family:'DM Sans',sans-serif;
+  font-size:11px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--gold);
+  font-style:normal;
+  opacity:.7;
+}
+
+/* ── SECTION HEAD ── */
+.section-head{display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;}
+.section-icon{width:36px;height:36px;border-radius:10px;background:rgba(201,150,58,0.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.section-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:#fff;}
+.section-body{
+  font-family:'DM Sans',sans-serif;
+  font-size:16.5px;
+  line-height:2;
+  color:#b8aa94;
+  margin-bottom:3rem;
+  letter-spacing:.01em;
+}
+
+/* ── HIGHLIGHT CARDS ── */
+.highlight-card{
+  position:relative;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:2rem 2.2rem;
+  margin:2.5rem 0;
+  overflow:hidden;
+  transition:border-color .3s,transform .3s,box-shadow .3s;
+}
+.highlight-card:hover{
+  border-color:rgba(201,150,58,0.45);
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,150,58,0.1);
+}
+.highlight-card::before{
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,150,58,0.3),transparent);
+}
+.highlight-card::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at top left,rgba(201,150,58,0.05),transparent 70%);
+  pointer-events:none;
+}
+.highlight-type{display:inline-flex;align-items:center;gap:.4rem;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;padding:4px 12px;border-radius:999px;margin-bottom:1rem;}
+.type-science{background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);color:#60a5fa;}
+.type-mystery{background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa;}
+.type-fact{background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:#34d399;}
+.type-rare{background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.3);color:#fb923c;}
+.highlight-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:.6rem;}
+.highlight-body{font-family:'DM Sans',sans-serif;font-size:14.5px;line-height:1.75;color:#9d9080;}
+
+/* ── UNLOCK CARD ── */
+.unlock-card{position:relative;background:var(--card);border:1px solid rgba(167,139,250,0.25);border-radius:20px;padding:2rem;margin:2.5rem 0;overflow:hidden;cursor:pointer;transition:all .3s;}
+.unlock-card:hover{border-color:rgba(167,139,250,0.6);transform:translateY(-2px);}
+.unlock-card .blur-content{filter:blur(5px);user-select:none;transition:filter .5s;pointer-events:none;}
+.unlock-card.revealed .blur-content{filter:none;}
+.unlock-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;background:rgba(10,8,6,0.55);backdrop-filter:blur(2px);border-radius:20px;transition:opacity .4s;z-index:2;}
+.unlock-card.revealed .unlock-overlay{opacity:0;pointer-events:none;}
+.unlock-icon{font-size:2rem;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.1);opacity:.7;}}
+.unlock-label{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#a78bfa;letter-spacing:.1em;}
+
+/* ── RITUAL STEPS ── */
+.ritual-steps{display:flex;flex-direction:column;gap:0;margin:1.5rem 0 3rem;}
+.ritual-step{display:flex;gap:1.2rem;align-items:flex-start;position:relative;padding-bottom:2rem;opacity:0;transform:translateX(-20px);animation:slideIn .5s forwards;}
+.ritual-step:last-child{padding-bottom:0;}
+.ritual-step:last-child .step-line{display:none;}
+@keyframes slideIn{to{opacity:1;transform:none;}}
+.step-num{width:36px;height:36px;border-radius:50%;background:rgba(201,150,58,0.1);border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:13px;color:var(--gold);flex-shrink:0;position:relative;z-index:1;}
+.step-line{position:absolute;left:17px;top:36px;bottom:0;width:1.5px;background:linear-gradient(to bottom,var(--border),transparent);}
+.step-content{padding-top:6px;}
+.step-title{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--text);margin-bottom:.3rem;}
+.step-body{font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--muted);line-height:1.6;}
+
+/* ── DIVIDER ── */
+.divider{display:flex;align-items:center;gap:1rem;margin:3rem 0;color:var(--border);}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.divider span{font-size:18px;opacity:.4;}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:none;}
+
+/* ── FLOATING COMPLETE BTN ── */
+.complete-wrap{position:fixed;bottom:2rem;right:2rem;z-index:100;}
+.complete-btn{
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+  background:rgba(10,8,6,0.85);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:13px 26px;
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  color:var(--text);
+  cursor:pointer;
+  backdrop-filter:blur(16px);
+  transition:all .3s;
+  box-shadow:0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,150,58,0.1);
+}
+.complete-btn:hover{
+  border-color:var(--gold);
+  color:var(--gold);
+  transform:translateY(-2px);
+  box-shadow:0 12px 40px rgba(0,0,0,0.6), 0 0 20px rgba(201,150,58,0.15);
+}
+.complete-btn.done{
+  background:rgba(34,197,94,0.12);
+  border-color:rgba(34,197,94,0.45);
+  color:#4ade80;
+}
+
+/* ── AI GENERATE BTN ── */
+.ai-section{background:linear-gradient(135deg,rgba(167,139,250,0.07),rgba(201,150,58,0.07));border:1px solid rgba(167,139,250,0.2);border-radius:20px;padding:2rem;margin:2.5rem 0;text-align:center;}
+.ai-btn{display:inline-flex;align-items:center;gap:.6rem;background:linear-gradient(135deg,#7c3aed,#c9963a);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:12px 26px;border-radius:999px;border:none;cursor:pointer;transition:opacity .2s,transform .2s;letter-spacing:.04em;}
+.ai-btn:hover{opacity:.88;transform:translateY(-1px);}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed;}
+.ai-result{margin-top:1.5rem;text-align:left;font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.8;color:#c4b89a;display:none;}
+.ai-result.visible{display:block;}
+
+/* ── NEARBY TEMPLES ── */
+.nearby-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1.5rem;}
+.nearby-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;text-decoration:none;transition:transform .2s,border-color .2s;display:block;}
+.nearby-card:hover{transform:translateY(-3px);border-color:rgba(201,150,58,0.4);}
+.nearby-img{width:100%;height:100px;object-fit:cover;filter:brightness(.7);}
+.nearby-info{padding:.8rem 1rem;}
+.nearby-name{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text);margin-bottom:.2rem;}
+.nearby-loc{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);}
+
+@media(max-width:640px){
+  .stats-row{margin:0 1rem;}
+  .body-wrap{padding:0 1.2rem 6rem;}
+  .hero-content{padding:0 1.2rem 3.5rem;}
+}
+</style>
+
+<!-- ── HERO ── -->
+<section class="hero">
+    <img class="hero-img" src="{{ temple.image.url }}" alt="{{ temple.name }}">
+    <div class="hero-gradient"></div>
+
+    <div class="status-badge status-{{ temple.status }}">
+        {% if temple.status == 'completed' %}✅ Visited
+        {% elif temple.status == 'planned' %}🔵 Planned
+        {% else %}🔴 Not Visited{% endif %}
     </div>
 
+    <div class="hero-content">
+        <a href="{% url 'temples' %}" class="back-link">← Atlas</a>
+        <div class="category-pill">{{ temple.get_category_display }}</div>
+        <h1 class="hero-title">{{ temple.name }}</h1>
+        <div class="hero-location">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ temple.location }}
+        </div>
+        <p class="hero-desc">{{ temple.description|truncatechars:200 }}</p>
+        <div class="hero-actions">
+            <a href="{% url 'map' %}" class="btn-ghost">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3,6 9,3 15,6 21,3 21,18 15,21 9,18 3,21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+                View on Map
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ── STATS ROW ── -->
+<div class="stats-row reveal">
+    {% if temple.deity %}<div class="stat-card"><div class="stat-label">🛕 Deity</div><div class="stat-value">{{ temple.deity }}</div></div>{% endif %}
+    {% if temple.dynasty %}<div class="stat-card"><div class="stat-label">🏰 Dynasty</div><div class="stat-value">{{ temple.dynasty }}</div></div>{% endif %}
+    {% if temple.timings %}<div class="stat-card"><div class="stat-label">🕐 Timings</div><div class="stat-value">{{ temple.timings }}</div></div>{% endif %}
+    {% if temple.best_season %}<div class="stat-card"><div class="stat-label">🌤 Best Season</div><div class="stat-value">{{ temple.best_season }}</div></div>{% endif %}
+    {% if temple.festivals %}<div class="stat-card"><div class="stat-label">🎉 Festivals</div><div class="stat-value">{{ temple.festivals|truncatechars:60 }}</div></div>{% endif %}
+    {% if not temple.deity and not temple.dynasty %}
+    <div class="stat-card"><div class="stat-label">📍 Location</div><div class="stat-value">{{ temple.location }}</div></div>
+    <div class="stat-card"><div class="stat-label">🏷 Category</div><div class="stat-value">{{ temple.get_category_display }}</div></div>
+    {% endif %}
 </div>
+
+<!-- ── BODY ── -->
+<div class="body-wrap">
+
+    <!-- XP BAR -->
+    <div class="xp-section reveal">
+        <div class="xp-header">
+            <span class="xp-title">⚔️ Explorer Progress</span>
+            <span class="xp-points">
+                {% if temple.status == 'completed' %}500 XP Earned
+                {% elif temple.status == 'planned' %}250 XP Locked
+                {% else %}0 XP{% endif %}
+            </span>
+        </div>
+        <div class="xp-bar-track">
+            <div class="xp-bar-fill" style="--xp-width:{% if temple.status == 'completed' %}100%{% elif temple.status == 'planned' %}45%{% else %}10%{% endif %}"></div>
+        </div>
+        <div class="xp-badges">
+            <span class="xp-badge">🗺 Discoverer</span>
+            {% if temple.status == 'completed' %}<span class="xp-badge">✅ Pilgrim</span><span class="xp-badge">📖 Lore Keeper</span>{% endif %}
+            {% if temple.category == 'heritage' %}<span class="xp-badge">🏛 Historian</span>{% endif %}
+            {% if temple.category == 'mountain' %}<span class="xp-badge">⛰ Summit Seeker</span>{% endif %}
+            {% if temple.category == 'beach' %}<span class="xp-badge">🏖 Coastal Rider</span>{% endif %}
+            {% if temple.mystery %}<span class="xp-badge">🔮 Mystery Hunter</span>{% endif %}
+            {% if temple.science_fact %}<span class="xp-badge">🔬 Myth Buster</span>{% endif %}
+        </div>
+    </div>
+
+    <!-- BIG QUOTE -->
+    {% if temple.quote or temple.description %}
+    <div class="big-quote reveal">
+        <p>{{ temple.quote|default:temple.description|truncatechars:220 }}</p>
+        <cite>— {{ temple.name }}, {{ temple.location }}</cite>
+    </div>
+    {% endif %}
+
+    <div class="divider reveal"><span>✦</span></div>
+
+    <!-- HISTORY -->
+    {% if temple.history %}
+    <div class="reveal">
+        <div class="section-head">
+            <div class="section-icon">🕰</div>
+            <h2 class="section-title">History</h2>
+        </div>
+        <p class="section-body">{{ temple.history }}</p>
+    </div>
+    {% endif %}
+
+    <!-- ARCHITECTURE -->
+    {% if temple.architecture %}
+    <div class="reveal">
+        <div class="section-head">
+            <div class="section-icon">🏛</div>
+            <h2 class="section-title">Architecture</h2>
+        </div>
+        <p class="section-body">{{ temple.architecture }}</p>
+    </div>
+    {% endif %}
+
+    <!-- SCIENCE HIGHLIGHT -->
+    {% if temple.science_fact %}
+    <div class="highlight-card reveal">
+        <div class="highlight-type type-science">🔬 Scientific Significance</div>
+        <div class="highlight-title">Ancient Wisdom Encoded Here</div>
+        <p class="highlight-body">{{ temple.science_fact }}</p>
+    </div>
+    {% endif %}
+
+    <!-- MYSTERY UNLOCK CARD -->
+    {% if temple.mystery %}
+    <div class="unlock-card reveal" onclick="this.classList.add('revealed')">
+        <div class="highlight-type type-mystery" style="margin-bottom:.8rem;">🔮 Hidden Mystery</div>
+        <div class="blur-content">
+            <div class="highlight-title">The Secret Historians Still Debate</div>
+            <p class="highlight-body">{{ temple.mystery }}</p>
+        </div>
+        <div class="unlock-overlay">
+            <div class="unlock-icon">🔒</div>
+            <div class="unlock-label">Tap to Reveal Mystery</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- RARE FACT -->
+    {% if temple.rare_fact %}
+    <div class="highlight-card reveal">
+        <div class="highlight-type type-rare">🌟 Rare Fact</div>
+        <div class="highlight-title">What Most Visitors Never Notice</div>
+        <p class="highlight-body">{{ temple.rare_fact }}</p>
+    </div>
+    {% endif %}
+
+    <div class="divider reveal"><span>✦</span></div>
+
+    <!-- RITUALS -->
+    {% if temple.rituals %}
+    <div class="reveal">
+        <div class="section-head">
+            <div class="section-icon">🙏</div>
+            <h2 class="section-title">Rituals & Customs</h2>
+        </div>
+        <div class="ritual-steps" id="ritualSteps"></div>
+    </div>
+    {% endif %}
+
+    <!-- VERIFIED FACT (coordinates) -->
+    <div class="highlight-card reveal">
+        <div class="highlight-type type-fact">✅ Verified Coordinates</div>
+        <div class="highlight-title">Pinned on Earth</div>
+        <p class="highlight-body">
+            {{ temple.name }} stands at <strong style="color:var(--gold)">{{ temple.latitude|floatformat:4 }}°N, {{ temple.longitude|floatformat:4 }}°E</strong> — a position the ancients chose not by accident. The geography, water sources, and horizon alignment at this exact location were considered sacred by those who built it.
+        </p>
+    </div>
+
+    <div class="divider reveal"><span>✦</span></div>
+
+    <!-- AI LORE GENERATOR -->
+    <div class="ai-section reveal">
+        <p style="font-family:'DM Sans',sans-serif;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:#a78bfa;margin-bottom:.5rem;">✨ AI Lore Engine</p>
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;color:#fff;margin-bottom:.5rem;">Generate Deep Lore</h3>
+        <p style="font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);margin-bottom:1.2rem;">Let AI reveal hidden stories, myths, and connections about {{ temple.name }} never written in any guidebook.</p>
+        <button class="ai-btn" id="aiBtn" onclick="generateLore()">
+            <span>✨</span> Reveal Hidden Lore
+        </button>
+        <div class="ai-result" id="aiResult"></div>
+    </div>
+
+    <!-- NEARBY TEMPLES -->
+    {% if nearby_temples %}
+    <div class="reveal">
+        <div class="section-head">
+            <div class="section-icon">📍</div>
+            <h2 class="section-title">Nearby Places</h2>
+        </div>
+        <div class="nearby-grid">
+            {% for t in nearby_temples %}
+            <a href="{% url 'temple_detail' t.id %}" class="nearby-card">
+                <img class="nearby-img" src="{{ t.image.url }}" alt="{{ t.name }}" onerror="this.style.display='none'">
+                <div class="nearby-info">
+                    <div class="nearby-name">{{ t.name }}</div>
+                    <div class="nearby-loc">📍 {{ t.location }}</div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- ── MARK COMPLETE BUTTON ── -->
+<div class="complete-wrap">
+    <button class="complete-btn {% if temple.status == 'completed' %}done{% endif %}" id="completeBtn">
+        {% if temple.status == 'completed' %}✅ Visited{% else %}🏁 Mark as Visited{% endif %}
+    </button>
+</div>
+
+<script>
+// ── Ritual steps from pipe-separated text ──────────────
+const ritualsRaw = `{{ temple.rituals|escapejs }}`;
+if (ritualsRaw.trim()) {
+    const steps = ritualsRaw.split('|').map(s => s.trim()).filter(Boolean);
+    const container = document.getElementById('ritualSteps');
+    if (container) {
+        steps.forEach((step, i) => {
+            const parts = step.split(':');
+            const title = parts[0] || step;
+            const body  = parts[1] || '';
+            container.innerHTML += `
+                <div class="ritual-step" style="animation-delay:${i*120}ms;">
+                    <div class="step-num">${i+1}</div>
+                    <div class="step-line"></div>
+                    <div class="step-content">
+                        <div class="step-title">${title}</div>
+                        ${body ? `<div class="step-body">${body}</div>` : ''}
+                    </div>
+                </div>`;
+        });
+    }
+}
+
+// ── Scroll reveal ──────────────────────────────────────
+const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+            setTimeout(() => e.target.classList.add('visible'), i * 60);
+            observer.unobserve(e.target);
+        }
+    });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── Zoom in on load ────────────────────────────────────
+// (handled by CSS animation below)
+
+// ── Mark complete ──────────────────────────────────────
+document.getElementById('completeBtn').addEventListener('click', function() {
+    if (!this.classList.contains('done')) {
+        this.classList.add('done');
+        this.innerHTML = '✅ Visited';
+        document.querySelector('.xp-bar-fill').style.setProperty('--xp-width','100%');
+        document.querySelector('.xp-bar-fill').style.width = '100%';
+        burst();
+    }
+});
+
+function burst() {
+    const colors = ['#c9963a','#e8a045','#f0b85a','#fff','#a78bfa'];
+    for (let i = 0; i < 60; i++) {
+        const el = document.createElement('div');
+        const size = Math.random() * 8 + 4;
+        el.style.cssText = `position:fixed;left:${window.innerWidth-60}px;bottom:60px;
+            width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};
+            border-radius:${Math.random()>.5?'50%':'2px'};pointer-events:none;z-index:9999;
+            animation:confetti${i} 1.2s ease forwards;`;
+        const tx=(Math.random()-.5)*300, ty=-(Math.random()*300+100), rot=Math.random()*720;
+        const style=document.createElement('style');
+        style.textContent=`@keyframes confetti${i}{0%{transform:translate(0,0) rotate(0deg);opacity:1;}100%{transform:translate(${tx}px,${ty}px) rotate(${rot}deg);opacity:0;}}`;
+        document.head.appendChild(style);
+        document.body.appendChild(el);
+        setTimeout(()=>{el.remove();style.remove();},1300);
+    }
+}
+
+// ── AI Lore Generator ──────────────────────────────────
+async function generateLore() {
+    const btn = document.getElementById('aiBtn');
+    const result = document.getElementById('aiResult');
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Summoning ancient knowledge...';
+
+    const templeName = `{{ temple.name|escapejs }}`;
+    const templeLocation = `{{ temple.location|escapejs }}`;
+    const templeDesc = `{{ temple.description|truncatechars:300|escapejs }}`;
+    const templeCategory = `{{ temple.get_category_display|escapejs }}`;
+
+    try {
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1000,
+                messages: [{
+                    role: "user",
+                    content: `You are a mystical historian and storyteller specializing in Indian sacred places. Write a deeply engaging, poetic, and historically grounded "hidden lore" passage about ${templeName} in ${templeLocation}. 
+
+Category: ${templeCategory}
+Known info: ${templeDesc}
+
+Include:
+1. One surprising scientific or astronomical fact about this place
+2. One ancient myth or legend connected to it
+3. One thing most tourists never know
+
+Format as 3 short paragraphs with bold headers like **🔬 The Science**, **📜 The Legend**, **🤫 The Secret**. Keep it mysterious, poetic, and awe-inspiring. Max 250 words.`
+                }]
+            })
+        });
+
+        const data = await response.json();
+        const text = data.content?.[0]?.text || 'The ancient spirits are silent today. Try again.';
+
+        // Render markdown bold
+        const html = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--gold)">$1</strong>')
+            .replace(/\n\n/g, '</p><p style="margin-top:1rem">')
+            .replace(/\n/g, '<br>');
+
+        result.innerHTML = `<p>${html}</p>`;
+        result.classList.add('visible');
+        btn.innerHTML = '<span>✨</span> Reveal Again';
+        btn.disabled = false;
+
+    } catch(e) {
+        result.innerHTML = '<p style="color:#f87171">Could not connect to the lore engine. Check your connection.</p>';
+        result.classList.add('visible');
+        btn.innerHTML = '<span>✨</span> Try Again';
+        btn.disabled = false;
+    }
+}
+</script>
 
 {% endblock %}

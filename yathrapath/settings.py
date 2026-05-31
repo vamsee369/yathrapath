@@ -59,6 +59,7 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.contrib.messages.context_processors.messages',
                 'django.contrib.auth.context_processors.auth',
+                'core.context_processors.footer_context', 
             ],
         },
     },
@@ -122,7 +123,7 @@ OPENROUTE_API_KEY = os.environ.get("OPENROUTE_API_KEY")
 CSRF_TRUSTED_ORIGINS = ["https://yathrapath.onrender.com"]
 
 # ── Security ─────────────────────────────────────────
-SECURE_HSTS_SECONDS = 31536000
+"""SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_SSL_REDIRECT = True
@@ -132,7 +133,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
-
+"""
 VAPID_PUBLIC_KEY = os.getenv("WEBPUSH_VAPID_PUBLIC_KEY")
 VAPID_PRIVATE_KEY = os.getenv("WEBPUSH_VAPID_PRIVATE_KEY")
 VAPID_CLAIMS = {

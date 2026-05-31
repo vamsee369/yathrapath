@@ -71,6 +71,20 @@ class Temple(models.Model):
                     default='temple'
                   )
 
+    # ── Rich detail fields ──────────────────────────────
+    deity        = models.CharField(max_length=200, blank=True)
+    dynasty      = models.CharField(max_length=200, blank=True)
+    timings      = models.CharField(max_length=200, blank=True)
+    best_season  = models.CharField(max_length=200, blank=True)
+    festivals    = models.TextField(blank=True)
+    history      = models.TextField(blank=True)
+    architecture = models.TextField(blank=True)
+    rituals      = models.TextField(blank=True)
+    science_fact = models.TextField(blank=True, help_text="Scientific or architectural wonder")
+    mystery      = models.TextField(blank=True, help_text="Hidden mystery or unexplained fact")
+    rare_fact    = models.TextField(blank=True, help_text="What most visitors never notice")
+    quote        = models.TextField(blank=True, help_text="A poetic or powerful quote about this place")
+
     def __str__(self):
         return self.name
 

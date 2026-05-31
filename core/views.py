@@ -20,11 +20,23 @@ def home(request):
 
 
 def temple_detail(request, id):
+    import math
     temple = get_object_or_404(Temple, id=id)
-    temples = Temple.objects.all()   # add this
+
+    # Find nearby temples within ~200km using simple distance
+    all_others = Temple.objects.exclude(id=id)
+    nearby = []
+    for t in all_others:
+        dlat = t.latitude  - temple.latitude
+        dlng = t.longitude - temple.longitude
+        dist = math.sqrt(dlat**2 + dlng**2)
+        if dist < 2.0:   # ~200km in degrees
+            nearby.append(t)
+    nearby = nearby[:3]  # max 3
+
     return render(request, 'core/temple_detail.html', {
         'temple': temple,
-        'temples': temples
+        'nearby_temples': nearby,
     })
 
 
@@ -128,7 +140,10 @@ def service_worker(request):
             content = f.read()
     except FileNotFoundError:
         content = '// sw not found'
-    return HttpResponse(content, content_type='application/javascript')
+    response = HttpResponse(content, content_type='application/javascript')
+    response['Service-Worker-Allowed'] = '/'   # ← allow SW to control entire site
+    response['Cache-Control'] = 'no-cache'     # ← always get fresh SW
+    return response
 
 
 def offline_page(request):
