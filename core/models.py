@@ -99,7 +99,7 @@ def temple_notification(sender, instance, created, **kwargs):
         _send_to_all({
             "title": "New Destination Added 🛕",
             "body": f"{instance.name}, {instance.location} is now on YatraPath!",
-            "url": f"/temples/{instance.id}/"
+            "url": f"/temple/{instance.id}/"   # was /temples/
         })
     else:
         # Check if status changed — compare with DB value before save
@@ -116,7 +116,7 @@ def temple_notification(sender, instance, created, **kwargs):
             _send_to_all({
                 "title": f"Status Updated {emoji}",
                 "body": f"{instance.name} is now marked as {label}.",
-                "url": f"/temples/{instance.id}/"
+                "url": f"/temple/{instance.id}/"   # was /temples/
             })
 
 
@@ -126,5 +126,5 @@ def blog_notification(sender, instance, created, **kwargs):
         _send_to_all({
             "title": "New Blog Post 📖",
             "body": f"{instance.title} — read it now on YatraPath!",
-            "url": "/blog/"
+            "url": f"/blog/{instance.id}/"     # was /blog/
         })
