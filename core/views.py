@@ -8,7 +8,8 @@ from .models import Blog, Temple, PushSubscription
 import json
 import math
 import os
-
+            #model='gemini-2.0-flash',
+            #model='gemini-1.5-flash',
 
 def home(request):
     temples       = Temple.objects.order_by('-id')[:6]
@@ -156,23 +157,85 @@ def lore_engine(request):
 
         client = genai.Client(api_key=os.environ.get('GOOGLE_API_KEY'))
 
-        prompt_extras = {
-            'Temple / Religious': "Include: 1) A surprising astronomical or Vastu fact. 2) A myth or legend about the deity. 3) A ritual detail most tourists miss.",
-            'Mountain / Hill':    "Include: 1) A geological wonder about this peak. 2) A legend or folk tale about the mountain. 3) A hidden trail or secret viewpoint most trekkers miss.",
-            'Beach / Coastal':    "Include: 1) A marine biology or tidal fact unique to this beach. 2) A maritime legend or local story. 3) The best-kept secret time to visit.",
-            'Scenic / Nature':    "Include: 1) An ecological or geological fact about this landscape. 2) A local legend connected to this natural site. 3) A rare seasonal phenomenon few people witness.",
-            'Heritage / Historical': "Include: 1) A forgotten engineering or construction secret. 2) A historical event that changed this place. 3) A hidden inscription or detail most visitors walk past.",
+        # ── Category-specific persona + headers + instructions ──
+        category_config = {
+            'temple': {
+                'persona':  'a mystical historian of Indian sacred architecture and ancient religion',
+                'headers':  ('🔭 The Astronomy', '📜 The Legend', '🤫 The Secret'),
+                'points':   [
+                    'A surprising astronomical, Vastu, or sacred geometry fact about this temple',
+                    'A myth or legend about the presiding deity or founding of this temple',
+                    'A ritual, inscription, or architectural detail most visitors completely miss',
+                ],
+            },
+            'mountain': {
+                'persona':  'a legendary mountaineer and folklore expert of the Indian subcontinent',
+                'headers':  ('🪨 The Geology', '🏔️ The Legend', '🧭 The Secret'),
+                'points':   [
+                    'A fascinating geological or ecological fact unique to this peak or hill',
+                    'A folk tale, tribal legend, or mythological story connected to this mountain',
+                    'A hidden viewpoint, rare seasonal phenomenon, or local secret most trekkers never discover',
+                ],
+            },
+            'beach': {
+                'persona':  'a coastal historian and marine storyteller of India\'s ancient shorelines',
+                'headers':  ('🌊 The Science', '⛵ The Legend', '🐚 The Secret'),
+                'points':   [
+                    'A surprising marine biology, tidal, or oceanographic fact specific to this coastline',
+                    'A maritime legend, sailor\'s tale, or ancient coastal myth from this shore',
+                    'The best-kept local secret — a hidden cove, rare tide event, or time most visitors never know',
+                ],
+            },
+            'scenic': {
+                'persona':  'a naturalist poet and ecological storyteller of India\'s wild landscapes',
+                'headers':  ('🌿 The Ecology', '🌙 The Legend', '✨ The Secret'),
+                'points':   [
+                    'A rare ecological, botanical, or geological fact about this landscape',
+                    'A local legend, tribal story, or ancient myth tied to this natural place',
+                    'A rare seasonal event, hidden species, or phenomenon that almost nobody witnesses',
+                ],
+            },
+            'heritage': {
+                'persona':  'a forgotten-history archaeologist and cultural detective of the Indian subcontinent',
+                'headers':  ('⚙️ The Engineering', '⚔️ The History', '🔍 The Secret'),
+                'points':   [
+                    'A forgotten construction technique, engineering marvel, or architectural mystery of this site',
+                    'A pivotal historical event, dynasty clash, or cultural turning point at this location',
+                    'A hidden inscription, buried chamber, or overlooked detail that most visitors walk straight past',
+                ],
+            },
+            'other': {
+                'persona':  'a curious travel historian and local lore expert of India',
+                'headers':  ('🔬 The Fact', '📖 The Story', '🤫 The Secret'),
+                'points':   [
+                    'A surprising scientific, historical, or geographical fact about this place',
+                    'A local legend, folk tale, or unusual story connected to this destination',
+                    'Something remarkable that most visitors never notice or know about',
+                ],
+            },
         }
-        extra = prompt_extras.get(temple_category, "Include: 1) A surprising fact. 2) A local legend. 3) Something most visitors never notice.")
 
-        prompt = f"""You are a mystical historian specializing in Indian sacred places. Write a deeply engaging hidden lore passage about {temple_name} in {temple_location}.
+        cfg = category_config.get(temple_category, category_config['other'])
+        h1, h2, h3 = cfg['headers']
+        p1, p2, p3 = cfg['points']
 
+        prompt = f"""You are {cfg['persona']}.
+
+Write a deeply engaging hidden lore passage about **{temple_name}** located in {temple_location}.
 Category: {temple_category}
 Known info: {temple_desc}
 
-{extra}
+Write exactly 3 short paragraphs using these bold headers:
+**{h1}** — {p1}
+**{h2}** — {p2}
+**{h3}** — {p3}
 
-Format as 3 short paragraphs with bold headers like **🔬 The Science**, **📜 The Legend**, **🤫 The Secret**. Keep it mysterious and poetic. Max 250 words."""
+Rules:
+- Keep each paragraph to 3-4 sentences maximum
+- Tone: mysterious, poetic, and vivid — like a travel journal entry from a century ago
+- Never use generic filler phrases like "this place is beautiful" or "visitors enjoy"
+- Total response must be under 260 words
+- Do not include any intro or outro — just the 3 paragraphs"""
 
         response = client.models.generate_content(
             model='gemini-2.5-flash',
@@ -184,3 +247,6 @@ Format as 3 short paragraphs with bold headers like **🔬 The Science**, **📜
         import traceback
         print("LORE ERROR:", traceback.format_exc())
         return JsonResponse({'error': str(e)}, status=500)
+def lore_page(request):
+    temples = Temple.objects.order_by('-id')
+    return render(request, 'core/lore.html', {'temples': temples})

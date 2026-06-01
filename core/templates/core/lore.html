@@ -1,0 +1,454 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+  /* ── Search bar — fully responsive ── */
+  .lore-search-outer {
+    width: 100%;
+    padding: 0 0 0 0;
+  }
+  .lore-search-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .lore-search-icon {
+    position: absolute;
+    left: 16px; top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+  .lore-search-input {
+    width: 100%;
+    height: 52px;
+    padding: 0 48px 0 46px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(167,139,250,0.25);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+    box-shadow: 0 0 0 0 rgba(167,139,250,0);
+  }
+  .lore-search-input::placeholder { color: rgba(255,255,255,0.3); }
+  .lore-search-input:focus {
+    border-color: rgba(167,139,250,0.6);
+    background: rgba(255,255,255,0.09);
+    box-shadow: 0 0 0 3px rgba(167,139,250,0.1), 0 4px 24px rgba(167,139,250,0.15);
+  }
+  .lore-search-clear {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    color: rgba(167,139,250,0.5);
+    font-size: 18px; cursor: pointer;
+    display: none;
+    line-height: 1;
+    padding: 4px;
+    transition: color 0.2s;
+  }
+  .lore-search-clear:hover { color: #c4b5fd; }
+  .lore-search-input:not(:placeholder-shown) ~ .lore-search-clear { display: block; }
+
+  /* ── Category chips — scrollable on mobile ── */
+  .chip-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .chip-row::-webkit-scrollbar { display: none; }
+  @media (max-width: 480px) {
+    .chip-row { justify-content: flex-start; flex-wrap: nowrap; padding: 0 0 6px; }
+  }
+  .cat-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 15px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.45);
+    font-family: 'Poppins', sans-serif;
+    font-size: 11px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .cat-chip:hover { color: #c4b5fd; border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.08); }
+  .cat-chip.active {
+    background: rgba(167,139,250,0.15);
+    border-color: rgba(167,139,250,0.5);
+    color: #c4b5fd;
+    box-shadow: 0 0 12px rgba(167,139,250,0.15);
+  }
+
+  /* ══════════════════════════════════════
+     NEW CARD STYLE — Arcane Scroll Card
+     A tall portrait card with:
+     - full-bleed image that fills top 65%
+     - a glowing animated scan-line on hover
+     - frosted info panel at bottom
+     - corner rune mark
+     - NO overflow:hidden so glow bleeds out
+  ══════════════════════════════════════ */
+  .lore-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 20px;
+  }
+  @media (max-width: 480px) {
+    .lore-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  }
+
+  .arc-card {
+    position: relative;
+    border-radius: 18px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* outer glow ring */
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.07),
+      0 8px 32px rgba(0,0,0,0.5);
+    transition: box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1);
+  }
+  .arc-card:hover {
+    transform: translateY(-8px) scale(1.015);
+    box-shadow:
+      0 0 0 1px rgba(167,139,250,0.4),
+      0 0 40px rgba(124,58,237,0.25),
+      0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  /* image container */
+  .arc-img-wrap {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  @media (max-width: 480px) { .arc-img-wrap { height: 150px; } }
+
+  .arc-img-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: brightness(0.7) saturate(0.75);
+    transition: transform 0.6s cubic-bezier(0.22,1,0.36,1), filter 0.4s ease;
+    display: block;
+  }
+  .arc-card:hover .arc-img-wrap img {
+    transform: scale(1.1);
+    filter: brightness(0.55) saturate(0.65);
+  }
+
+  /* permanent gradient overlay — dark at bottom */
+  .arc-img-wrap::before {
+    content: '';
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(
+      to bottom,
+      transparent 40%,
+      rgba(10,5,30,0.85) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* scan-line — horizontal purple beam that sweeps on hover */
+  .arc-scan {
+    position: absolute;
+    left: 0; right: 0;
+    top: -4px;
+    height: 3px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(167,139,250,0.0) 10%,
+      rgba(167,139,250,0.9) 50%,
+      rgba(167,139,250,0.0) 90%,
+      transparent 100%
+    );
+    box-shadow: 0 0 12px 4px rgba(124,58,237,0.5);
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    animation: none;
+  }
+  .arc-card:hover .arc-scan {
+    opacity: 1;
+    animation: scanDown 1.4s ease-in-out infinite;
+  }
+  @keyframes scanDown {
+    0%   { top: 0%; }
+    100% { top: 100%; }
+  }
+
+  /* top-right rune corner mark */
+  .arc-rune {
+    position: absolute;
+    top: 10px; right: 10px;
+    z-index: 4;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(124,58,237,0.25);
+    border: 1px solid rgba(167,139,250,0.4);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    opacity: 0.7;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .arc-card:hover .arc-rune {
+    opacity: 1;
+    transform: rotate(15deg) scale(1.1);
+  }
+
+  /* bottom frosted info panel */
+  .arc-info {
+    background: rgba(12,8,28,0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(167,139,250,0.15);
+    padding: 12px 14px 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* glowing left accent bar */
+  .arc-info::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20%; bottom: 20%;
+    width: 2px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, transparent, #7c3aed, transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .arc-card:hover .arc-info::before { opacity: 1; }
+
+  .arc-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .arc-loc {
+    font-family: 'Poppins', sans-serif;
+    font-size: 10px;
+    color: rgba(255,255,255,0.38);
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* reveal cta — slides up from bottom of info panel */
+  .arc-cta {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    margin-top: 4px;
+    padding: 7px 0;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(201,150,58,0.2));
+    border: 1px solid rgba(167,139,250,0.25);
+    color: #c4b5fd;
+    font-family: 'Poppins', sans-serif;
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.3s ease, transform 0.3s ease, background 0.2s;
+  }
+  .arc-card:hover .arc-cta {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .arc-cta:hover {
+    background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(201,150,58,0.35));
+  }
+
+  /* ── No results ── */
+  #noResults {
+    display: none;
+    text-align: center;
+    padding: 5rem 0;
+    color: rgba(255,255,255,0.25);
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+  }
+</style>
+
+<div class="min-h-screen pt-28 pb-24 px-4 sm:px-6 max-w-6xl mx-auto">
+
+  <!-- ── HERO ── -->
+  <div class="text-center mb-12" data-aos="fade-up">
+    <p class="text-xs font-semibold tracking-[0.25em] uppercase mb-4 font-[Poppins]"
+       style="color:rgba(167,139,250,0.6);">✨ AI Powered</p>
+    <h1 class="text-4xl sm:text-5xl md:text-6xl font-[Playfair_Display] font-black text-white leading-tight mb-4">
+      Lore Engine
+    </h1>
+    <p class="text-gray-400 text-sm sm:text-base md:text-lg font-[Poppins] max-w-xl mx-auto leading-relaxed">
+      Pick a destination. Let AI reveal hidden science, ancient legends,
+      and secrets most visitors never know.
+    </p>
+    <div class="flex items-center justify-center gap-3 mt-6">
+      <div style="height:1px;width:50px;background:linear-gradient(90deg,transparent,rgba(167,139,250,0.5));"></div>
+      <span style="font-size:18px;">🔮</span>
+      <div style="height:1px;width:50px;background:linear-gradient(90deg,rgba(167,139,250,0.5),transparent);"></div>
+    </div>
+  </div>
+
+  <!-- ── SEARCH ── -->
+  <div class="lore-search-outer mb-5" data-aos="fade-up">
+    <div class="lore-search-wrap">
+      <svg class="lore-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="rgba(167,139,250,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input id="loreSearch" type="text" class="lore-search-input"
+             placeholder="Search temples, mountains, beaches…" autocomplete="off">
+      <button class="lore-search-clear" onclick="clearLoreSearch()" tabindex="-1">×</button>
+    </div>
+  </div>
+
+  <!-- ── CATEGORY CHIPS ── -->
+  <div class="chip-row mb-8 px-1" data-aos="fade-up">
+    <span class="cat-chip active" data-cat="">🌐 All</span>
+    <span class="cat-chip" data-cat="temple">🛕 Temple</span>
+    <span class="cat-chip" data-cat="mountain">⛰️ Mountain</span>
+    <span class="cat-chip" data-cat="beach">🏖️ Beach</span>
+    <span class="cat-chip" data-cat="scenic">🌿 Scenic</span>
+    <span class="cat-chip" data-cat="heritage">🏛️ Heritage</span>
+    <span class="cat-chip" data-cat="other">📍 Other</span>
+  </div>
+
+  <!-- Count -->
+  <p id="loreCount"
+     class="text-xs font-[Poppins] tracking-widest uppercase mb-6"
+     style="color:rgba(167,139,250,0.35);">
+    {{ temples|length }} Destination{{ temples|length|pluralize }}
+  </p>
+
+  <!-- ── ARCANE CARD GRID ── -->
+  <div id="loreGrid" class="lore-grid" data-aos="fade-up">
+
+    {% for temple in temples %}
+    <a href="{% url 'temple_detail' temple.id %}#lore"
+       class="arc-card"
+       data-name="{{ temple.name|lower }}"
+       data-cat="{{ temple.category }}">
+
+      <!-- Image -->
+      <div class="arc-img-wrap">
+        <img src="{{ temple.image.url }}" alt="{{ temple.name }}" loading="lazy">
+        <!-- scan line -->
+        <div class="arc-scan"></div>
+        <!-- rune mark -->
+        <div class="arc-rune">✦</div>
+      </div>
+
+      <!-- Info panel -->
+      <div class="arc-info">
+        <div class="arc-name">{{ temple.name }}</div>
+        <div class="arc-loc">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none"
+               stroke="rgba(250,204,21,0.45)" stroke-width="2.5" stroke-linecap="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          {{ temple.location }}
+        </div>
+        <div class="arc-cta">✨ Reveal Lore</div>
+      </div>
+
+    </a>
+    {% empty %}
+    <p class="col-span-full text-center text-gray-500 font-[Poppins] py-10">
+      No destinations added yet.
+    </p>
+    {% endfor %}
+
+  </div>
+
+  <!-- No results -->
+  <div id="noResults">
+    <div style="font-size:2.5rem;margin-bottom:12px;">🔮</div>
+    No destinations match your search.
+    <br>
+    <button onclick="clearLoreSearch()"
+      style="margin-top:14px;padding:8px 22px;border-radius:999px;
+             background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.3);
+             color:#c4b5fd;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">
+      Clear search
+    </button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  const searchEl = document.getElementById('loreSearch');
+  const grid     = document.getElementById('loreGrid');
+  const noRes    = document.getElementById('noResults');
+  const countEl  = document.getElementById('loreCount');
+  const chips    = document.querySelectorAll('.cat-chip');
+  const cards    = document.querySelectorAll('.arc-card');
+  let activeCat  = '';
+
+  function run() {
+    const q = searchEl.value.toLowerCase().trim();
+    let visible = 0;
+    cards.forEach(card => {
+      const show = (!q || card.dataset.name.includes(q))
+                && (!activeCat || card.dataset.cat === activeCat);
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    noRes.style.display = visible === 0 ? 'block' : 'none';
+    grid.style.display  = visible === 0 ? 'none'  : '';
+    countEl.textContent = visible + ' Destination' + (visible !== 1 ? 's' : '');
+  }
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeCat = chip.dataset.cat;
+      run();
+    });
+  });
+
+  searchEl.addEventListener('input', run);
+
+  window.clearLoreSearch = function () {
+    searchEl.value = '';
+    activeCat = '';
+    chips.forEach(c => c.classList.remove('active'));
+    chips[0].classList.add('active');
+    run();
+  };
+})();
+</script>
+
+{% endblock %}

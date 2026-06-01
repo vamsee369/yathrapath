@@ -20,5 +20,6 @@ urlpatterns = [
     path('push/unsubscribe/', views.push_unsubscribe, name='push_unsubscribe'),
     path('push/vapid-key/',   views.vapid_public_key, name='vapid_public_key'),
     path('about/', views.about, name='about'),
+    path('lore-engine/', views.lore_page, name='lore_page'),
     path('lore/', views.lore_engine, name='lore_engine'),
 ]
