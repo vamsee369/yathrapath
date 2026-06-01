@@ -1,0 +1,584 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  /* ── Divider ── */
+  .gold-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(250,204,21,0.55), transparent);
+    margin: 4.5rem 0;
+  }
+
+  /* ── Glass card — more breathing room, visible gold border ── */
+  .glass-card {
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(250,204,21,0.18);
+    border-radius: 28px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 8px 40px rgba(0,0,0,0.35);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  }
+  .glass-card:hover {
+    border-color: rgba(250,204,21,0.42);
+    background: rgba(255,255,255,0.075);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 0 50px rgba(250,204,21,0.08), 0 12px 48px rgba(0,0,0,0.4);
+  }
+
+  /* ── Feature card — stronger gold accent on left edge ── */
+  .feature-card {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(250,204,21,0.15);
+    border-left: 3px solid rgba(250,204,21,0.5);
+    border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    padding: 1.6rem 1.8rem;
+    display: flex;
+    gap: 1.2rem;
+    align-items: flex-start;
+  }
+  .feature-card:hover {
+    border-color: rgba(250,204,21,0.4);
+    border-left-color: rgba(250,204,21,0.9);
+    background: rgba(255,255,255,0.07);
+    transform: translateX(4px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35), -4px 0 20px rgba(250,204,21,0.06);
+  }
+
+  /* ── Icon ring ── */
+  .icon-ring {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(250,204,21,0.1);
+    border: 1px solid rgba(250,204,21,0.3);
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    box-shadow: 0 0 16px rgba(250,204,21,0.08);
+  }
+
+  /* ── Stat card ── */
+  .stat-card {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(250,204,21,0.22);
+    border-radius: 22px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 6px 28px rgba(0,0,0,0.35);
+    text-align: center;
+    padding: 1.8rem 1rem;
+    transition: all 0.3s ease;
+  }
+  .stat-card:hover {
+    border-color: rgba(250,204,21,0.5);
+    background: rgba(255,255,255,0.07);
+    box-shadow: 0 0 30px rgba(250,204,21,0.1), 0 8px 32px rgba(0,0,0,0.4);
+    transform: translateY(-3px);
+  }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: #facc15;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(250,204,21,0.3);
+  }
+
+  /* ── Traveller card ── */
+  .traveller-card {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(250,204,21,0.16);
+    border-radius: 22px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    padding: 1.6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+  .traveller-card:hover {
+    border-color: rgba(250,204,21,0.4);
+    background: rgba(255,255,255,0.07);
+    box-shadow: 0 0 36px rgba(250,204,21,0.09), 0 10px 36px rgba(0,0,0,0.4);
+    transform: translateY(-4px);
+  }
+
+  /* ── Avatar ── */
+  .avatar {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #facc15;
+    background: linear-gradient(135deg, rgba(250,204,21,0.15), rgba(251,146,60,0.1));
+    border: 2px solid rgba(250,204,21,0.35);
+    box-shadow: 0 0 20px rgba(250,204,21,0.12);
+    flex-shrink: 0;
+  }
+  .avatar-lead {
+    width: 76px; height: 76px;
+    font-size: 1.8rem;
+    border: 2px solid rgba(250,204,21,0.55);
+    box-shadow: 0 0 28px rgba(250,204,21,0.18);
+  }
+
+  /* ── Instagram pill ── */
+  .ig-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.25s ease;
+  }
+  .ig-pill:hover {
+    background: rgba(193,53,132,0.15);
+    border-color: rgba(193,53,132,0.5);
+    color: #f9a8d4;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
+
+  /* ── Social pill (for creator) ── */
+  .social-pill {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 11px 20px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(250,204,21,0.25);
+    color: #fff;
+    text-decoration: none;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.25s ease;
+  }
+  .social-pill:hover {
+    background: rgba(250,204,21,0.1);
+    border-color: rgba(250,204,21,0.55);
+    color: #facc15;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  /* ── Timeline dot ── */
+  .timeline-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #facc15;
+    box-shadow: 0 0 12px rgba(250,204,21,0.7);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  /* ── Hero quote line ── */
+  .hero-quote-line {
+    width: 40px; height: 2px;
+    background: #facc15;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 12px;
+  }
+
+  /* ── Lead badge ── */
+  .lead-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: rgba(250,204,21,0.12);
+    border: 1px solid rgba(250,204,21,0.35);
+    color: #facc15;
+    font-family: 'Poppins', sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+</style>
+
+<div class="min-h-screen pt-28 pb-24 px-6 max-w-5xl mx-auto">
+
+  <!-- ── HERO ── -->
+  <div class="text-center mb-20" data-aos="fade-up">
+    <p class="text-xs font-semibold tracking-[0.25em] uppercase text-yellow-400/50 font-[Poppins] mb-4">
+      <span class="hero-quote-line"></span>The Story Behind the Path
+    </p>
+    <h1 class="text-5xl md:text-7xl font-[Playfair_Display] font-black text-white leading-tight mb-5">
+      YathraPath
+    </h1>
+    <p class="text-xl md:text-2xl font-[Playfair_Display] italic text-yellow-400 mb-6">
+      Travel as Memory
+    </p>
+    <p class="text-gray-400 text-base md:text-lg leading-relaxed max-w-2xl mx-auto font-[Poppins]">
+      Not every journey is meant to be forgotten. YathraPath is a digital archive of travels across India —
+      every temple visited, every road taken, every moment captured as it happens.
+    </p>
+  </div>
+
+  <div class="gold-divider"></div>
+
+  <!-- ── WHAT IS YATHRAPATH ── -->
+  <section data-aos="fade-up" class="mb-20">
+    <h2 class="text-3xl font-[Playfair_Display] font-bold text-white mb-8">What is YathraPath?</h2>
+    <div class="glass-card p-8 md:p-12">
+      <p class="text-gray-300 text-base md:text-lg leading-relaxed font-[Poppins] mb-5">
+        <span class="text-white font-semibold">YathraPath</span> (from Sanskrit —
+        <em class="text-yellow-400">Yathra</em> meaning journey,
+        <em class="text-yellow-400">Path</em> meaning road) is a travel chronicle built to preserve the
+        memories of sacred and scenic destinations across India.
+      </p>
+      <p class="text-gray-300 text-base leading-relaxed font-[Poppins] mb-5">
+        It began as a simple idea: a place to log temple visits — not just names and dates, but the
+        atmosphere, the architecture, the myths, and the feeling of standing somewhere ancient. Over time it
+        grew into a full exploration tool with interactive maps, route planning, and a travel blog.
+      </p>
+      <p class="text-gray-400 text-base leading-relaxed font-[Poppins]">
+        This is not a commercial platform. It's a quiet, honest space — a digital memory of where we've
+        been and what it meant.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── STATS ── -->
+  <section data-aos="fade-up" class="mb-20">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+      <div class="stat-card">
+        <div class="stat-num">{{ total_temples }}</div>
+        <p class="text-gray-400 text-xs font-[Poppins] tracking-widest uppercase mt-2">Destinations</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">6+</div>
+        <p class="text-gray-400 text-xs font-[Poppins] tracking-widest uppercase mt-2">Categories</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">∞</div>
+        <p class="text-gray-400 text-xs font-[Poppins] tracking-widest uppercase mt-2">Stories</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">10</div>
+        <p class="text-gray-400 text-xs font-[Poppins] tracking-widest uppercase mt-2">Travellers</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="gold-divider"></div>
+
+  <!-- ── FEATURES ── -->
+  <section data-aos="fade-up" class="mb-20">
+    <h2 class="text-3xl font-[Playfair_Display] font-bold text-white mb-3">What You Can Do</h2>
+    <p class="text-gray-500 font-[Poppins] text-sm mb-10">Everything built to make your journey richer.</p>
+    <div class="grid md:grid-cols-2 gap-4">
+
+      <div class="feature-card">
+        <div class="icon-ring">🗺️</div>
+        <div>
+          <h3 class="text-white font-semibold font-[Poppins] text-base mb-1">Interactive Map</h3>
+          <p class="text-gray-400 text-sm font-[Poppins] leading-relaxed">See all destinations on a live Leaflet map, colour-coded by visit status — green visited, blue planned, red unexplored.</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-ring">🛕</div>
+        <div>
+          <h3 class="text-white font-semibold font-[Poppins] text-base mb-1">Destination Archive</h3>
+          <p class="text-gray-400 text-sm font-[Poppins] leading-relaxed">Rich detail pages — deity, dynasty, architecture, best season, rituals, science facts, hidden mysteries, and quotes.</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-ring">🧭</div>
+        <div>
+          <h3 class="text-white font-semibold font-[Poppins] text-base mb-1">Route Planner</h3>
+          <p class="text-gray-400 text-sm font-[Poppins] leading-relaxed">Select multiple destinations and generate an optimised driving route with distances and durations via OpenRouteService.</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-ring">📖</div>
+        <div>
+          <h3 class="text-white font-semibold font-[Poppins] text-base mb-1">Travel Blog</h3>
+          <p class="text-gray-400 text-sm font-[Poppins] leading-relaxed">Stories, reflections, and photographs from every journey — published as a personal travel journal.</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-ring">💸</div>
+        <div>
+          <h3 class="text-white font-semibold font-[Poppins] text-base mb-1">Expense Tracker</h3>
+          <p class="text-gray-400 text-sm font-[Poppins] leading-relaxed">A companion tool to log and track trip expenses, keeping every budget organised before and after travel.</p>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-ring">🔔</div>
+        <div>
+          <h3 class="text-white font-semibold font-[Poppins] text-base mb-1">Push Notifications</h3>
+          <p class="text-gray-400 text-sm font-[Poppins] leading-relaxed">Get notified instantly when a destination is added or status changes — even when the browser is closed, via Web Push.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="gold-divider"></div>
+
+  <!-- ── PHILOSOPHY ── -->
+  <section data-aos="fade-up" class="mb-20">
+    <h2 class="text-3xl font-[Playfair_Display] font-bold text-white mb-10">The Philosophy</h2>
+    <div class="space-y-6">
+
+      <div class="flex gap-5 items-start">
+        <div class="timeline-dot mt-2"></div>
+        <div>
+          <h4 class="text-white font-semibold font-[Poppins] mb-1">Memory over metrics</h4>
+          <p class="text-gray-400 text-sm font-[Poppins] leading-relaxed">YathraPath isn't about how many places you visit. It's about preserving what each place felt like — the silence of an old temple at dawn, the smell of incense, the weight of centuries in a single stone.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-5 items-start">
+        <div class="timeline-dot mt-2"></div>
+        <div>
+          <h4 class="text-white font-semibold font-[Poppins] mb-1">Depth over breadth</h4>
+          <p class="text-gray-400 text-sm font-[Poppins] leading-relaxed">Each destination is documented with genuine detail — historical context, architectural notes, rare facts, and mysteries most visitors never notice. Understanding, not just a checklist.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-5 items-start">
+        <div class="timeline-dot mt-2"></div>
+        <div>
+          <h4 class="text-white font-semibold font-[Poppins] mb-1">Personal and honest</h4>
+          <p class="text-gray-400 text-sm font-[Poppins] leading-relaxed">The status system — Visited, Planned, Not Visited — is a live record of our ongoing journey across India. Nothing is backdated or curated for appearance.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="gold-divider"></div>
+
+  <!-- ── BUILT WITH ── -->
+  <section data-aos="fade-up" class="mb-20">
+    <h2 class="text-3xl font-[Playfair_Display] font-bold text-white mb-8">Built With</h2>
+    <div class="glass-card p-8 md:p-10">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-y-5 gap-x-8">
+        {% for item in "x"|ljust:"9" %}
+        {% endfor %}
+        <div class="flex items-center gap-3">
+          <div style="width:5px;height:5px;border-radius:50%;background:#facc15;box-shadow:0 0 6px rgba(250,204,21,0.6);flex-shrink:0;"></div>
+          <span class="text-gray-300 text-sm font-[Poppins]">Django (Python)</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div style="width:5px;height:5px;border-radius:50%;background:#facc15;box-shadow:0 0 6px rgba(250,204,21,0.6);flex-shrink:0;"></div>
+          <span class="text-gray-300 text-sm font-[Poppins]">Tailwind CSS</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div style="width:5px;height:5px;border-radius:50%;background:#facc15;box-shadow:0 0 6px rgba(250,204,21,0.6);flex-shrink:0;"></div>
+          <span class="text-gray-300 text-sm font-[Poppins]">Leaflet.js</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div style="width:5px;height:5px;border-radius:50%;background:#facc15;box-shadow:0 0 6px rgba(250,204,21,0.6);flex-shrink:0;"></div>
+          <span class="text-gray-300 text-sm font-[Poppins]">Cloudinary</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div style="width:5px;height:5px;border-radius:50%;background:#facc15;box-shadow:0 0 6px rgba(250,204,21,0.6);flex-shrink:0;"></div>
+          <span class="text-gray-300 text-sm font-[Poppins]">OpenRouteService</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div style="width:5px;height:5px;border-radius:50%;background:#facc15;box-shadow:0 0 6px rgba(250,204,21,0.6);flex-shrink:0;"></div>
+          <span class="text-gray-300 text-sm font-[Poppins]">Web Push (VAPID)</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div style="width:5px;height:5px;border-radius:50%;background:#facc15;box-shadow:0 0 6px rgba(250,204,21,0.6);flex-shrink:0;"></div>
+          <span class="text-gray-300 text-sm font-[Poppins]">SQLite / PostgreSQL</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div style="width:5px;height:5px;border-radius:50%;background:#facc15;box-shadow:0 0 6px rgba(250,204,21,0.6);flex-shrink:0;"></div>
+          <span class="text-gray-300 text-sm font-[Poppins]">Render (Hosting)</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div style="width:5px;height:5px;border-radius:50%;background:#facc15;box-shadow:0 0 6px rgba(250,204,21,0.6);flex-shrink:0;"></div>
+          <span class="text-gray-300 text-sm font-[Poppins]">PWA / Service Worker</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="gold-divider"></div>
+
+  <!-- ── THE TRAVELLERS ── -->
+  <section data-aos="fade-up" class="mb-8">
+
+    <h2 class="text-3xl font-[Playfair_Display] font-bold text-white mb-3">The Travellers</h2>
+    <p class="text-gray-500 font-[Poppins] text-sm mb-12">The crew behind every journey on YathraPath.</p>
+
+    <!-- ── CREATOR (lead card) ── -->
+    <div class="glass-card p-8 md:p-10 mb-6">
+      <div class="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+        <div class="avatar avatar-lead">V</div>
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-1 flex-wrap">
+            <h3 class="text-white text-xl font-[Playfair_Display] font-bold">Vamsee Tandra</h3>
+            <span class="lead-badge">Creator</span>
+          </div>
+          <p class="text-yellow-400/60 text-xs font-[Poppins] tracking-widest uppercase mb-4">Web Designer & Traveler</p>
+          <p class="text-gray-400 text-sm font-[Poppins] leading-relaxed mb-5">
+            Built YathraPath from scratch — every line of code, every destination added, every detail written.
+            The site exists because journeys deserve to be remembered properly, not just bookmarked.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <a href="https://www.instagram.com/vamseetandra/" target="_blank" rel="noopener noreferrer" class="social-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+              @vamseetandra
+            </a>
+            <a href="https://yathrapath.onrender.com" target="_blank" rel="noopener noreferrer" class="social-pill">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              yathrapath.onrender.com
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CO-TRAVELLERS GRID ── -->
+    <p class="text-xs font-semibold tracking-[0.2em] uppercase text-yellow-400/40 font-[Poppins] mb-6 pl-1">Co-Travellers</p>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+
+      <!-- Abhi -->
+      <div class="traveller-card">
+        <div class="avatar">A</div>
+        <div>
+          <p class="text-white text-sm font-[Poppins] font-semibold">Abhi</p>
+        </div>
+        <a href="https://www.instagram.com/_abhi.tandra_/" target="_blank" rel="noopener noreferrer" class="ig-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @_abhi.tandra_
+        </a>
+      </div>
+
+      <!-- Narendra -->
+      <div class="traveller-card">
+        <div class="avatar">N</div>
+        <div>
+          <p class="text-white text-sm font-[Poppins] font-semibold">Narendra</p>
+        </div>
+        <a href="https://www.instagram.com/nari_tarak_30/" target="_blank" rel="noopener noreferrer" class="ig-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @nari_tarak_30
+        </a>
+      </div>
+
+      <!-- Devi Sri Prasad -->
+      <div class="traveller-card">
+        <div class="avatar">D</div>
+        <div>
+          <p class="text-white text-sm font-[Poppins] font-semibold">Devi Sri Prasad</p>
+        </div>
+        <a href="https://www.instagram.com/_dsp__76/" target="_blank" rel="noopener noreferrer" class="ig-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @_dsp__76
+        </a>
+      </div>
+
+      <!-- Jaswanth -->
+      <div class="traveller-card">
+        <div class="avatar">J</div>
+        <div>
+          <p class="text-white text-sm font-[Poppins] font-semibold">Jaswanth</p>
+        </div>
+        <a href="https://www.instagram.com/thejaswanthh/" target="_blank" rel="noopener noreferrer" class="ig-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @thejaswanthh
+        </a>
+      </div>
+
+      <!-- Lokesh -->
+      <div class="traveller-card">
+        <div class="avatar">L</div>
+        <div>
+          <p class="text-white text-sm font-[Poppins] font-semibold">Lokesh</p>
+        </div>
+        <a href="https://www.instagram.com/loki._.uzumakiii/" target="_blank" rel="noopener noreferrer" class="ig-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @loki._.uzumakiii
+        </a>
+      </div>
+
+      <!-- Sai -->
+      <div class="traveller-card">
+        <div class="avatar">S</div>
+        <div>
+          <p class="text-white text-sm font-[Poppins] font-semibold">Sai</p>
+        </div>
+        <a href="https://www.instagram.com/venky_._15/" target="_blank" rel="noopener noreferrer" class="ig-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @venky_._15
+        </a>
+      </div>
+
+      <!-- Pream Sai -->
+      <div class="traveller-card">
+        <div class="avatar">P</div>
+        <div>
+          <p class="text-white text-sm font-[Poppins] font-semibold">Pream Sai</p>
+        </div>
+        <a href="https://www.instagram.com/name_is_prem_37/" target="_blank" rel="noopener noreferrer" class="ig-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @name_is_prem_37
+        </a>
+      </div>
+
+      <!-- Satya -->
+      <div class="traveller-card">
+        <div class="avatar">S</div>
+        <div>
+          <p class="text-white text-sm font-[Poppins] font-semibold">Satya</p>
+        </div>
+        <a href="https://www.instagram.com/call_me__satya__126/" target="_blank" rel="noopener noreferrer" class="ig-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @call_me__satya__126
+        </a>
+      </div>
+
+      <!-- Venu Karthik -->
+      <div class="traveller-card">
+        <div class="avatar">K</div>
+        <div>
+          <p class="text-white text-sm font-[Poppins] font-semibold">Venu Karthik</p>
+        </div>
+        <a href="https://www.instagram.com/_karthik_0.7/" target="_blank" rel="noopener noreferrer" class="ig-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          @_karthik_0.7
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── CLOSING QUOTE ── -->
+  <div data-aos="fade-up" class="text-center mt-24">
+    <p class="text-gray-600 text-xs font-[Poppins] tracking-[0.2em] uppercase mb-4">A guiding thought</p>
+    <blockquote class="text-2xl md:text-3xl font-[Playfair_Display] italic text-white/80 leading-relaxed max-w-2xl mx-auto">
+      "The journey itself is the destination — every step a verse, every road a poem."
+    </blockquote>
+    <div class="w-10 h-[2px] bg-yellow-400 mx-auto mt-6 rounded-full" style="box-shadow: 0 0 12px rgba(250,204,21,0.5);"></div>
+  </div>
+
+</div>
+
+{% endblock %}

@@ -37,7 +37,7 @@ main { padding-top: 0 !important; }
   flex-direction:column;
   justify-content:flex-end;
   overflow:hidden;
-  margin-top:0;        /* flush to very top */
+  margin-top:0;
 }
 .hero-img{
   position:absolute;
@@ -51,7 +51,6 @@ main { padding-top: 0 !important; }
   transform-origin: center center;
   animation: heroZoom 8s ease forwards;
 }
-
 @keyframes heroZoom {
   from { transform: scale(1.08); }
   to   { transform: scale(1.0);  }
@@ -62,7 +61,7 @@ main { padding-top: 0 !important; }
   top:-1px;
   background:linear-gradient(
     to bottom,
-    rgba(10,8,6,0.45) 0%,     /* darker at top to blend with navbar */
+    rgba(10,8,6,0.45) 0%,
     rgba(10,8,6,0.0)  20%,
     rgba(10,8,6,0.5)  60%,
     rgba(10,8,6,0.97) 100%
@@ -248,6 +247,9 @@ main { padding-top: 0 !important; }
 .type-mystery{background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);color:#a78bfa;}
 .type-fact{background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);color:#34d399;}
 .type-rare{background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.3);color:#fb923c;}
+.type-nature{background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;}
+.type-water{background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;}
+.type-trek{background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;}
 .highlight-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:.6rem;}
 .highlight-body{font-family:'DM Sans',sans-serif;font-size:14.5px;line-height:1.75;color:#9d9080;}
 
@@ -273,6 +275,13 @@ main { padding-top: 0 !important; }
 .step-content{padding-top:6px;}
 .step-title{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--text);margin-bottom:.3rem;}
 .step-body{font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--muted);line-height:1.6;}
+
+/* ── INFO GRID (for beach/mountain quick stats) ── */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;margin:1.5rem 0 3rem;}
+.info-tile{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.4rem;transition:border-color .25s;}
+.info-tile:hover{border-color:rgba(201,150,58,0.4);}
+.info-tile-label{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);opacity:.75;margin-bottom:.4rem;}
+.info-tile-value{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);line-height:1.5;}
 
 /* ── DIVIDER ── */
 .divider{display:flex;align-items:center;gap:1rem;margin:3rem 0;color:var(--border);}
@@ -367,16 +376,41 @@ main { padding-top: 0 !important; }
     </div>
 </section>
 
-<!-- ── STATS ROW ── -->
+<!-- ── STATS ROW — category-aware quick stats ── -->
 <div class="stats-row reveal">
-    {% if temple.deity %}<div class="stat-card"><div class="stat-label">🛕 Deity</div><div class="stat-value">{{ temple.deity }}</div></div>{% endif %}
-    {% if temple.dynasty %}<div class="stat-card"><div class="stat-label">🏰 Dynasty</div><div class="stat-value">{{ temple.dynasty }}</div></div>{% endif %}
-    {% if temple.timings %}<div class="stat-card"><div class="stat-label">🕐 Timings</div><div class="stat-value">{{ temple.timings }}</div></div>{% endif %}
-    {% if temple.best_season %}<div class="stat-card"><div class="stat-label">🌤 Best Season</div><div class="stat-value">{{ temple.best_season }}</div></div>{% endif %}
-    {% if temple.festivals %}<div class="stat-card"><div class="stat-label">🎉 Festivals</div><div class="stat-value">{{ temple.festivals|truncatechars:60 }}</div></div>{% endif %}
-    {% if not temple.deity and not temple.dynasty %}
-    <div class="stat-card"><div class="stat-label">📍 Location</div><div class="stat-value">{{ temple.location }}</div></div>
-    <div class="stat-card"><div class="stat-label">🏷 Category</div><div class="stat-value">{{ temple.get_category_display }}</div></div>
+    {% if temple.category == 'temple' or temple.category == 'heritage' %}
+        {% if temple.deity %}<div class="stat-card"><div class="stat-label">🛕 Deity</div><div class="stat-value">{{ temple.deity }}</div></div>{% endif %}
+        {% if temple.dynasty %}<div class="stat-card"><div class="stat-label">🏰 Dynasty</div><div class="stat-value">{{ temple.dynasty }}</div></div>{% endif %}
+        {% if temple.timings %}<div class="stat-card"><div class="stat-label">🕐 Timings</div><div class="stat-value">{{ temple.timings }}</div></div>{% endif %}
+        {% if temple.best_season %}<div class="stat-card"><div class="stat-label">🌤 Best Season</div><div class="stat-value">{{ temple.best_season }}</div></div>{% endif %}
+        {% if temple.festivals %}<div class="stat-card"><div class="stat-label">🎉 Festivals</div><div class="stat-value">{{ temple.festivals|truncatechars:60 }}</div></div>{% endif %}
+
+    {% elif temple.category == 'mountain' %}
+        {% if temple.altitude %}<div class="stat-card"><div class="stat-label">📏 Altitude</div><div class="stat-value">{{ temple.altitude }}</div></div>{% endif %}
+        {% if temple.trek_difficulty %}<div class="stat-card"><div class="stat-label">🥾 Difficulty</div><div class="stat-value">{{ temple.get_trek_difficulty_display }}</div></div>{% endif %}
+        {% if temple.trek_duration %}<div class="stat-card"><div class="stat-label">⏱ Trek Duration</div><div class="stat-value">{{ temple.trek_duration }}</div></div>{% endif %}
+        {% if temple.best_season %}<div class="stat-card"><div class="stat-label">🌤 Best Season</div><div class="stat-value">{{ temple.best_season }}</div></div>{% endif %}
+        {% if temple.timings %}<div class="stat-card"><div class="stat-label">🕐 Timings</div><div class="stat-value">{{ temple.timings }}</div></div>{% endif %}
+
+    {% elif temple.category == 'beach' %}
+        {% if temple.beach_type %}<div class="stat-card"><div class="stat-label">🏖 Beach Type</div><div class="stat-value">{{ temple.beach_type }}</div></div>{% endif %}
+        {% if temple.tide_info %}<div class="stat-card"><div class="stat-label">🌊 Tides</div><div class="stat-value">{{ temple.tide_info }}</div></div>{% endif %}
+        {% if temple.best_season %}<div class="stat-card"><div class="stat-label">🌤 Best Season</div><div class="stat-value">{{ temple.best_season }}</div></div>{% endif %}
+        {% if temple.sunset_sunrise %}<div class="stat-card"><div class="stat-label">🌅 View</div><div class="stat-value">{{ temple.get_sunset_sunrise_display }}</div></div>{% endif %}
+        {% if temple.timings %}<div class="stat-card"><div class="stat-label">🕐 Visit Hours</div><div class="stat-value">{{ temple.timings }}</div></div>{% endif %}
+
+    {% elif temple.category == 'scenic' %}
+        {% if temple.landscape_type %}<div class="stat-card"><div class="stat-label">🌿 Landscape</div><div class="stat-value">{{ temple.landscape_type }}</div></div>{% endif %}
+        {% if temple.best_season %}<div class="stat-card"><div class="stat-label">🌤 Best Season</div><div class="stat-value">{{ temple.best_season }}</div></div>{% endif %}
+        {% if temple.entry_info %}<div class="stat-card"><div class="stat-label">🎟 Entry</div><div class="stat-value">{{ temple.entry_info }}</div></div>{% endif %}
+        {% if temple.sunset_sunrise %}<div class="stat-card"><div class="stat-label">🌅 View</div><div class="stat-value">{{ temple.get_sunset_sunrise_display }}</div></div>{% endif %}
+        {% if temple.timings %}<div class="stat-card"><div class="stat-label">🕐 Timings</div><div class="stat-value">{{ temple.timings }}</div></div>{% endif %}
+
+    {% else %}
+        <div class="stat-card"><div class="stat-label">📍 Location</div><div class="stat-value">{{ temple.location }}</div></div>
+        <div class="stat-card"><div class="stat-label">🏷 Category</div><div class="stat-value">{{ temple.get_category_display }}</div></div>
+        {% if temple.best_season %}<div class="stat-card"><div class="stat-label">🌤 Best Season</div><div class="stat-value">{{ temple.best_season }}</div></div>{% endif %}
+        {% if temple.timings %}<div class="stat-card"><div class="stat-label">🕐 Timings</div><div class="stat-value">{{ temple.timings }}</div></div>{% endif %}
     {% endif %}
 </div>
 
@@ -402,8 +436,10 @@ main { padding-top: 0 !important; }
             {% if temple.category == 'heritage' %}<span class="xp-badge">🏛 Historian</span>{% endif %}
             {% if temple.category == 'mountain' %}<span class="xp-badge">⛰ Summit Seeker</span>{% endif %}
             {% if temple.category == 'beach' %}<span class="xp-badge">🏖 Coastal Rider</span>{% endif %}
+            {% if temple.category == 'scenic' %}<span class="xp-badge">🌿 Nature Walker</span>{% endif %}
             {% if temple.mystery %}<span class="xp-badge">🔮 Mystery Hunter</span>{% endif %}
             {% if temple.science_fact %}<span class="xp-badge">🔬 Myth Buster</span>{% endif %}
+            {% if temple.trek_difficulty == 'hard' or temple.trek_difficulty == 'extreme' %}<span class="xp-badge">🏔 Peak Chaser</span>{% endif %}
         </div>
     </div>
 
@@ -417,43 +453,219 @@ main { padding-top: 0 !important; }
 
     <div class="divider reveal"><span>✦</span></div>
 
-    <!-- HISTORY -->
-    {% if temple.history %}
-    <div class="reveal">
-        <div class="section-head">
-            <div class="section-icon">🕰</div>
-            <h2 class="section-title">History</h2>
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- TEMPLE / RELIGIOUS SECTIONS                                  -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    {% if temple.category == 'temple' %}
+
+        {% if temple.history %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">🕰</div>
+                <h2 class="section-title">History</h2>
+            </div>
+            <p class="section-body">{{ temple.history }}</p>
         </div>
-        <p class="section-body">{{ temple.history }}</p>
-    </div>
-    {% endif %}
+        {% endif %}
 
-    <!-- ARCHITECTURE -->
-    {% if temple.architecture %}
-    <div class="reveal">
-        <div class="section-head">
-            <div class="section-icon">🏛</div>
-            <h2 class="section-title">Architecture</h2>
+        {% if temple.architecture %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">🏛</div>
+                <h2 class="section-title">Architecture</h2>
+            </div>
+            <p class="section-body">{{ temple.architecture }}</p>
         </div>
-        <p class="section-body">{{ temple.architecture }}</p>
-    </div>
-    {% endif %}
+        {% endif %}
 
-    <!-- SCIENCE HIGHLIGHT -->
-    {% if temple.science_fact %}
-    <div class="highlight-card reveal">
-        <div class="highlight-type type-science">🔬 Scientific Significance</div>
-        <div class="highlight-title">Ancient Wisdom Encoded Here</div>
-        <p class="highlight-body">{{ temple.science_fact }}</p>
-    </div>
-    {% endif %}
+        {% if temple.science_fact %}
+        <div class="highlight-card reveal">
+            <div class="highlight-type type-science">🔬 Scientific Significance</div>
+            <div class="highlight-title">Ancient Wisdom Encoded Here</div>
+            <p class="highlight-body">{{ temple.science_fact }}</p>
+        </div>
+        {% endif %}
 
-    <!-- MYSTERY UNLOCK CARD -->
+        {% if temple.rituals %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">🙏</div>
+                <h2 class="section-title">Rituals & Customs</h2>
+            </div>
+            <div class="ritual-steps" id="ritualSteps"></div>
+        </div>
+        {% endif %}
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- HERITAGE / HISTORICAL SECTIONS                              -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    {% elif temple.category == 'heritage' %}
+
+        {% if temple.history %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">🕰</div>
+                <h2 class="section-title">History</h2>
+            </div>
+            <p class="section-body">{{ temple.history }}</p>
+        </div>
+        {% endif %}
+
+        {% if temple.architecture %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">🏛</div>
+                <h2 class="section-title">Architecture & Structure</h2>
+            </div>
+            <p class="section-body">{{ temple.architecture }}</p>
+        </div>
+        {% endif %}
+
+        {% if temple.science_fact %}
+        <div class="highlight-card reveal">
+            <div class="highlight-type type-science">🔬 Engineering Marvel</div>
+            <div class="highlight-title">Built to Last Centuries</div>
+            <p class="highlight-body">{{ temple.science_fact }}</p>
+        </div>
+        {% endif %}
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- MOUNTAIN / HILL SECTIONS                                    -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    {% elif temple.category == 'mountain' %}
+
+        {% if temple.altitude or temple.trek_difficulty or temple.trek_duration %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">⛰</div>
+                <h2 class="section-title">Trek Details</h2>
+            </div>
+            <div class="info-grid">
+                {% if temple.altitude %}
+                <div class="info-tile">
+                    <div class="info-tile-label">📏 Altitude</div>
+                    <div class="info-tile-value">{{ temple.altitude }}</div>
+                </div>
+                {% endif %}
+                {% if temple.trek_difficulty %}
+                <div class="info-tile">
+                    <div class="info-tile-label">🥾 Difficulty</div>
+                    <div class="info-tile-value">{{ temple.get_trek_difficulty_display }}</div>
+                </div>
+                {% endif %}
+                {% if temple.trek_duration %}
+                <div class="info-tile">
+                    <div class="info-tile-label">⏱ Duration</div>
+                    <div class="info-tile-value">{{ temple.trek_duration }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if temple.viewpoints %}
+        <div class="highlight-card reveal">
+            <div class="highlight-type type-trek">🗺 Viewpoints & Peaks</div>
+            <div class="highlight-title">What You'll See from the Top</div>
+            <p class="highlight-body">{{ temple.viewpoints }}</p>
+        </div>
+        {% endif %}
+
+        {% if temple.flora_fauna %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">🌱</div>
+                <h2 class="section-title">Flora & Fauna</h2>
+            </div>
+            <p class="section-body">{{ temple.flora_fauna }}</p>
+        </div>
+        {% endif %}
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- BEACH / COASTAL SECTIONS                                    -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    {% elif temple.category == 'beach' %}
+
+        {% if temple.water_activity %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">🏄</div>
+                <h2 class="section-title">Water Activities</h2>
+            </div>
+            <p class="section-body">{{ temple.water_activity }}</p>
+        </div>
+        {% endif %}
+
+        {% if temple.tide_info %}
+        <div class="highlight-card reveal">
+            <div class="highlight-type type-water">🌊 Tide & Safety Info</div>
+            <div class="highlight-title">Before You Swim</div>
+            <p class="highlight-body">{{ temple.tide_info }}</p>
+        </div>
+        {% endif %}
+
+        {% if temple.nearby_stays %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">🏨</div>
+                <h2 class="section-title">Where to Stay Nearby</h2>
+            </div>
+            <p class="section-body">{{ temple.nearby_stays }}</p>
+        </div>
+        {% endif %}
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SCENIC / NATURE SECTIONS                                    -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    {% elif temple.category == 'scenic' %}
+
+        {% if temple.landscape_type %}
+        <div class="highlight-card reveal">
+            <div class="highlight-type type-nature">🌿 Landscape</div>
+            <div class="highlight-title">What Makes This Place Special</div>
+            <p class="highlight-body">{{ temple.landscape_type }}</p>
+        </div>
+        {% endif %}
+
+        {% if temple.wildlife %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">🦋</div>
+                <h2 class="section-title">Wildlife & Birds</h2>
+            </div>
+            <p class="section-body">{{ temple.wildlife }}</p>
+        </div>
+        {% endif %}
+
+        {% if temple.flora_fauna %}
+        <div class="reveal">
+            <div class="section-head">
+                <div class="section-icon">🌱</div>
+                <h2 class="section-title">Flora & Fauna</h2>
+            </div>
+            <p class="section-body">{{ temple.flora_fauna }}</p>
+        </div>
+        {% endif %}
+
+        {% if temple.entry_info %}
+        <div class="highlight-card reveal">
+            <div class="highlight-type type-fact">🎟 Entry & Permits</div>
+            <div class="highlight-title">Plan Before You Go</div>
+            <p class="highlight-body">{{ temple.entry_info }}</p>
+        </div>
+        {% endif %}
+
+    {% endif %}
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- END CATEGORY-SPECIFIC SECTIONS                              -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+
+    <!-- MYSTERY UNLOCK CARD — shown for ALL categories -->
     {% if temple.mystery %}
     <div class="unlock-card reveal" onclick="this.classList.add('revealed')">
         <div class="highlight-type type-mystery" style="margin-bottom:.8rem;">🔮 Hidden Mystery</div>
         <div class="blur-content">
-            <div class="highlight-title">The Secret Historians Still Debate</div>
+            <div class="highlight-title">The Secret Few Know</div>
             <p class="highlight-body">{{ temple.mystery }}</p>
         </div>
         <div class="unlock-overlay">
@@ -463,7 +675,7 @@ main { padding-top: 0 !important; }
     </div>
     {% endif %}
 
-    <!-- RARE FACT -->
+    <!-- RARE FACT — shown for ALL categories -->
     {% if temple.rare_fact %}
     <div class="highlight-card reveal">
         <div class="highlight-type type-rare">🌟 Rare Fact</div>
@@ -474,29 +686,31 @@ main { padding-top: 0 !important; }
 
     <div class="divider reveal"><span>✦</span></div>
 
-    <!-- RITUALS -->
-    {% if temple.rituals %}
-    <div class="reveal">
-        <div class="section-head">
-            <div class="section-icon">🙏</div>
-            <h2 class="section-title">Rituals & Customs</h2>
-        </div>
-        <div class="ritual-steps" id="ritualSteps"></div>
-    </div>
-    {% endif %}
-
-    <!-- VERIFIED FACT (coordinates) -->
+    <!-- VERIFIED COORDINATES — shown for ALL categories -->
     <div class="highlight-card reveal">
         <div class="highlight-type type-fact">✅ Verified Coordinates</div>
         <div class="highlight-title">Pinned on Earth</div>
         <p class="highlight-body">
-            {{ temple.name }} stands at <strong style="color:var(--gold)">{{ temple.latitude|floatformat:4 }}°N, {{ temple.longitude|floatformat:4 }}°E</strong> — a position the ancients chose not by accident. The geography, water sources, and horizon alignment at this exact location were considered sacred by those who built it.
+            {{ temple.name }} stands at <strong style="color:var(--gold)">{{ temple.latitude|floatformat:4 }}°N, {{ temple.longitude|floatformat:4 }}°E</strong>.
+            {% if temple.category == 'temple' %}
+                The geography, water sources, and horizon alignment at this exact location were considered sacred by those who built it.
+            {% elif temple.category == 'mountain' %}
+                A point on the earth where sky meets stone — chosen by nature, discovered by explorers.
+            {% elif temple.category == 'beach' %}
+                Where land surrenders to the sea — every tide reshapes this place, but the coordinates remain eternal.
+            {% elif temple.category == 'scenic' %}
+                A corner of the world that reminds you why Earth is worth exploring.
+            {% elif temple.category == 'heritage' %}
+                Coordinates where human ambition left its mark on stone for centuries to come.
+            {% else %}
+                A place marked in time, waiting to be explored.
+            {% endif %}
         </p>
     </div>
 
     <div class="divider reveal"><span>✦</span></div>
 
-    <!-- AI LORE GENERATOR -->
+    <!-- AI LORE GENERATOR — shown for ALL categories -->
     <div class="ai-section reveal">
         <p style="font-family:'DM Sans',sans-serif;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:#a78bfa;margin-bottom:.5rem;">✨ AI Lore Engine</p>
         <h3 style="font-family:'Playfair Display',serif;font-size:1.4rem;color:#fff;margin-bottom:.5rem;">Generate Deep Lore</h3>
@@ -507,7 +721,7 @@ main { padding-top: 0 !important; }
         <div class="ai-result" id="aiResult"></div>
     </div>
 
-    <!-- NEARBY TEMPLES -->
+    <!-- NEARBY PLACES -->
     {% if nearby_temples %}
     <div class="reveal">
         <div class="section-head">
@@ -538,7 +752,7 @@ main { padding-top: 0 !important; }
 </div>
 
 <script>
-// ── Ritual steps from pipe-separated text ──────────────
+// ── Ritual steps (temple only) ─────────────────────────────
 const ritualsRaw = `{{ temple.rituals|escapejs }}`;
 if (ritualsRaw.trim()) {
     const steps = ritualsRaw.split('|').map(s => s.trim()).filter(Boolean);
@@ -561,7 +775,7 @@ if (ritualsRaw.trim()) {
     }
 }
 
-// ── Scroll reveal ──────────────────────────────────────
+// ── Scroll reveal ──────────────────────────────────────────
 const observer = new IntersectionObserver(entries => {
     entries.forEach((e, i) => {
         if (e.isIntersecting) {
@@ -572,10 +786,7 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-// ── Zoom in on load ────────────────────────────────────
-// (handled by CSS animation below)
-
-// ── Mark complete ──────────────────────────────────────
+// ── Mark complete ──────────────────────────────────────────
 document.getElementById('completeBtn').addEventListener('click', function() {
     if (!this.classList.contains('done')) {
         this.classList.add('done');
@@ -604,47 +815,29 @@ function burst() {
     }
 }
 
-// ── AI Lore Generator ──────────────────────────────────
+// ── AI Lore Generator ──────────────────────────────────────
 async function generateLore() {
     const btn = document.getElementById('aiBtn');
     const result = document.getElementById('aiResult');
     btn.disabled = true;
     btn.innerHTML = '<span>⏳</span> Summoning ancient knowledge...';
 
-    const templeName = `{{ temple.name|escapejs }}`;
-    const templeLocation = `{{ temple.location|escapejs }}`;
-    const templeDesc = `{{ temple.description|truncatechars:300|escapejs }}`;
-    const templeCategory = `{{ temple.get_category_display|escapejs }}`;
-
     try {
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
+        const response = await fetch("/lore/", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
             body: JSON.stringify({
-                model: "claude-sonnet-4-20250514",
-                max_tokens: 1000,
-                messages: [{
-                    role: "user",
-                    content: `You are a mystical historian and storyteller specializing in Indian sacred places. Write a deeply engaging, poetic, and historically grounded "hidden lore" passage about ${templeName} in ${templeLocation}. 
-
-Category: ${templeCategory}
-Known info: ${templeDesc}
-
-Include:
-1. One surprising scientific or astronomical fact about this place
-2. One ancient myth or legend connected to it
-3. One thing most tourists never know
-
-Format as 3 short paragraphs with bold headers like **🔬 The Science**, **📜 The Legend**, **🤫 The Secret**. Keep it mysterious, poetic, and awe-inspiring. Max 250 words.`
-                }]
+                name:        `{{ temple.name|escapejs }}`,
+                location:    `{{ temple.location|escapejs }}`,
+                description: `{{ temple.description|truncatechars:300|escapejs }}`,
+                category:    `{{ temple.get_category_display|escapejs }}`
             })
         });
 
         const data = await response.json();
-        const text = data.content?.[0]?.text || 'The ancient spirits are silent today. Try again.';
+        if (data.error) throw new Error(data.error);
 
-        // Render markdown bold
-        const html = text
+        const html = data.text
             .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--gold)">$1</strong>')
             .replace(/\n\n/g, '</p><p style="margin-top:1rem">')
             .replace(/\n/g, '<br>');
@@ -655,7 +848,7 @@ Format as 3 short paragraphs with bold headers like **🔬 The Science**, **📜
         btn.disabled = false;
 
     } catch(e) {
-        result.innerHTML = '<p style="color:#f87171">Could not connect to the lore engine. Check your connection.</p>';
+        result.innerHTML = '<p style="color:#f87171">The spirits are silent. Try again shortly.</p>';
         result.classList.add('visible');
         btn.innerHTML = '<span>✨</span> Try Again';
         btn.disabled = false;
