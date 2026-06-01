@@ -6,7 +6,6 @@
   /* ── Search bar — fully responsive ── */
   .lore-search-outer {
     width: 100%;
-    padding: 0 0 0 0;
   }
   .lore-search-wrap {
     position: relative;
@@ -172,7 +171,7 @@
   .arc-scan {
     position: absolute;
     left: 0; right: 0;
-    top: -4px;
+    top: 0;
     height: 3px;
     background: linear-gradient(90deg,
       transparent 0%,
@@ -231,6 +230,7 @@
     z-index: 2;
   }
 
+
   /* glowing left accent bar */
   .arc-info::before {
     content: '';
@@ -287,6 +287,22 @@
   .arc-cta:hover {
     background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(201,150,58,0.35));
   }
+  .lore-sts-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.45); font-family: 'Poppins', sans-serif;
+    font-size: 11px; font-weight: 500; cursor: pointer;
+    transition: all 0.2s ease; white-space: nowrap; user-select: none; flex-shrink: 0;
+  }
+  .lsdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .lore-sts-chip.ls-all     { background: rgba(167,139,250,0.15); border-color: rgba(167,139,250,0.5); color: #c4b5fd; box-shadow: 0 0 12px rgba(167,139,250,0.15); }
+  .lore-sts-chip.ls-visited { background: rgba(34,197,94,0.12);   border-color: rgba(34,197,94,0.45);  color: #86efac; box-shadow: 0 0 10px rgba(34,197,94,0.1); }
+  .lore-sts-chip.ls-planned { background: rgba(59,130,246,0.12);  border-color: rgba(59,130,246,0.45); color: #93c5fd; box-shadow: 0 0 10px rgba(59,130,246,0.1); }
+  .lore-sts-chip.ls-not     { background: rgba(239,68,68,0.12);   border-color: rgba(239,68,68,0.45);  color: #fca5a5; box-shadow: 0 0 10px rgba(239,68,68,0.1); }
+  .lore-sts-chip:not(.ls-all):not(.ls-visited):not(.ls-planned):not(.ls-not):hover {
+    color: #c4b5fd; border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.08);
+  }
 
   /* ── No results ── */
   #noResults {
@@ -342,6 +358,19 @@
     <span class="cat-chip" data-cat="heritage">🏛️ Heritage</span>
     <span class="cat-chip" data-cat="other">📍 Other</span>
   </div>
+    <!-- Status chips -->
+  <div class="flex gap-3 flex-wrap justify-center mb-8 px-1" data-aos="fade-up">
+    <span class="lore-sts-chip ls-all" data-lstatus="" id="lstatus-all">✦ All Statuses</span>
+    <span class="lore-sts-chip" data-lstatus="completed" id="lstatus-visited">
+      <span class="lsdot" style="background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,0.7);"></span>Visited
+    </span>
+    <span class="lore-sts-chip" data-lstatus="planned" id="lstatus-planned">
+      <span class="lsdot" style="background:#60a5fa;box-shadow:0 0 6px rgba(96,165,250,0.7);"></span>Planned
+    </span>
+    <span class="lore-sts-chip" data-lstatus="not_visited" id="lstatus-not">
+      <span class="lsdot" style="background:#f87171;box-shadow:0 0 6px rgba(248,113,113,0.7);"></span>Not Visited
+    </span>
+  </div>
 
   <!-- Count -->
   <p id="loreCount"
@@ -354,10 +383,12 @@
   <div id="loreGrid" class="lore-grid" data-aos="fade-up">
 
     {% for temple in temples %}
-    <a href="{% url 'temple_detail' temple.id %}#lore"
-       class="arc-card"
-       data-name="{{ temple.name|lower }}"
-       data-cat="{{ temple.category }}">
+<a href="{% url 'temple_detail' temple.id %}#lore"
+   class="arc-card"
+   data-name="{{ temple.name|lower }}"
+   data-location="{{ temple.location|lower }}"
+   data-cat="{{ temple.category }}"
+   data-status="{{ temple.status }}">
 
       <!-- Image -->
       <div class="arc-img-wrap">
@@ -374,7 +405,7 @@
         <div class="arc-loc">
           <svg width="8" height="8" viewBox="0 0 24 24" fill="none"
                stroke="rgba(250,204,21,0.45)" stroke-width="2.5" stroke-linecap="round">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
             <circle cx="12" cy="10" r="3"/>
           </svg>
           {{ temple.location }}
@@ -408,44 +439,64 @@
 
 <script>
 (function () {
-  const searchEl = document.getElementById('loreSearch');
-  const grid     = document.getElementById('loreGrid');
-  const noRes    = document.getElementById('noResults');
-  const countEl  = document.getElementById('loreCount');
-  const chips    = document.querySelectorAll('.cat-chip');
-  const cards    = document.querySelectorAll('.arc-card');
-  let activeCat  = '';
+  const searchEl   = document.getElementById('loreSearch');
+  const grid       = document.getElementById('loreGrid');
+  const noRes      = document.getElementById('noResults');
+  const countEl    = document.getElementById('loreCount');
+  const chips      = document.querySelectorAll('.cat-chip');
+  const stsChips   = document.querySelectorAll('.lore-sts-chip');
+  const cards      = document.querySelectorAll('.arc-card');
+  let activeCat    = '';
+  let activeStatus = '';
+
+  function setAllLoreSts() {
+    stsChips.forEach(c => c.classList.remove('ls-all','ls-visited','ls-planned','ls-not'));
+    document.getElementById('lstatus-all').classList.add('ls-all');
+  }
 
   function run() {
     const q = searchEl.value.toLowerCase().trim();
     let visible = 0;
     cards.forEach(card => {
-      const show = (!q || card.dataset.name.includes(q))
-                && (!activeCat || card.dataset.cat === activeCat);
-      card.style.display = show ? '' : 'none';
-      if (show) visible++;
+      const ok = (!q           || card.dataset.name.includes(q) || card.dataset.location.includes(q))
+              && (!activeCat    || card.dataset.cat === activeCat)
+              && (!activeStatus || card.dataset.status === activeStatus);
+      card.style.display = ok ? '' : 'none';
+      if (ok) visible++;
     });
     noRes.style.display = visible === 0 ? 'block' : 'none';
     grid.style.display  = visible === 0 ? 'none'  : '';
     countEl.textContent = visible + ' Destination' + (visible !== 1 ? 's' : '');
   }
 
-  chips.forEach(chip => {
-    chip.addEventListener('click', () => {
-      chips.forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      activeCat = chip.dataset.cat;
-      run();
-    });
-  });
+  chips.forEach(chip => chip.addEventListener('click', () => {
+    chips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeCat = chip.dataset.cat;
+    run();
+  }));
+
+  stsChips.forEach(chip => chip.addEventListener('click', () => {
+    const val = chip.dataset.lstatus;
+    if (val === activeStatus && val !== '') { activeStatus = ''; setAllLoreSts(); }
+    else {
+      activeStatus = val;
+      stsChips.forEach(c => c.classList.remove('ls-all','ls-visited','ls-planned','ls-not'));
+      if (val === '')             chip.classList.add('ls-all');
+      else if (val==='completed') chip.classList.add('ls-visited');
+      else if (val==='planned')   chip.classList.add('ls-planned');
+      else                        chip.classList.add('ls-not');
+    }
+    run();
+  }));
 
   searchEl.addEventListener('input', run);
 
   window.clearLoreSearch = function () {
-    searchEl.value = '';
-    activeCat = '';
+    searchEl.value = ''; activeCat = ''; activeStatus = '';
     chips.forEach(c => c.classList.remove('active'));
     chips[0].classList.add('active');
+    setAllLoreSts();
     run();
   };
 })();

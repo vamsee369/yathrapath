@@ -3,46 +3,59 @@
 {% block content %}
 
 <style>
-    /* ── Search bar glass ── */
-    .yp-glass {
-        background: rgba(255,255,255,0.07);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255,255,255,0.15);
-        transition: border-color 0.25s, background 0.25s;
+    /* ── Search bar (lore-style, golden yellow) ── */
+    .tp-search-outer {
+        width: 100%;
     }
-    .yp-glass:focus-within {
-        border-color: rgba(250,204,21,0.5);
-        background: rgba(255,255,255,0.10);
+    .tp-search-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
     }
-    .yp-field {
-        background: transparent; border: none; outline: none;
-        color: #fff; font-family: 'Poppins', sans-serif;
-        font-size: 14px; width: 100%;
+    .tp-search-icon {
+        position: absolute;
+        left: 16px; top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        flex-shrink: 0;
     }
-    .yp-field::placeholder { color: rgba(255,255,255,0.35); }
-    .yp-field option { background: #0f0f0f; color: #fff; }
-    .yp-float-label {
-        font-family: 'Poppins', sans-serif; font-size: 9px; font-weight: 500;
-        letter-spacing: 0.14em; text-transform: uppercase;
-        color: rgba(250,204,21,0.55); pointer-events: none;
-        position: absolute; top: 9px; left: 14px;
+    .tp-search-input {
+        width: 100%;
+        height: 52px;
+        padding: 0 48px 0 46px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(250,204,21,0.25);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        color: #fff;
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+        box-shadow: 0 0 0 0 rgba(250,204,21,0);
     }
-    .yp-divider { width:1px; background:rgba(255,255,255,0.12); align-self:stretch; flex-shrink:0; }
-    .yp-pill {
-        display:inline-flex; align-items:center; gap:6px;
-        padding:4px 10px 4px 12px; border-radius:999px;
-        background:rgba(250,204,21,0.08); border:1px solid rgba(250,204,21,0.25);
-        font-family:'Poppins',sans-serif; font-size:11px; color:#facc15;
-        animation:pillIn 0.18s ease;
+    .tp-search-input::placeholder { color: rgba(255,255,255,0.3); }
+    .tp-search-input:focus {
+        border-color: rgba(250,204,21,0.6);
+        background: rgba(255,255,255,0.09);
+        box-shadow: 0 0 0 3px rgba(250,204,21,0.1), 0 4px 24px rgba(250,204,21,0.15);
     }
-    @keyframes pillIn { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
-    .yp-pill-x {
-        background:none; border:none; color:rgba(250,204,21,0.5);
-        cursor:pointer; padding:0; font-size:14px; line-height:1;
-        display:flex; align-items:center; transition:color 0.15s;
+    .tp-search-clear {
+        position: absolute;
+        right: 14px; top: 50%;
+        transform: translateY(-50%);
+        background: none; border: none;
+        color: rgba(250,204,21,0.5);
+        font-size: 18px; cursor: pointer;
+        display: none;
+        line-height: 1;
+        padding: 4px;
+        transition: color 0.2s;
     }
-    .yp-pill-x:hover { color:#facc15; }
+    .tp-search-clear:hover { color: #facc15; }
+    .tp-search-input:not(:placeholder-shown) ~ .tp-search-clear { display: block; }
 
     /* ── Destination card ── */
     .dest-card {
@@ -128,14 +141,65 @@
         backdrop-filter: blur(8px);
     }
 
-    @media (max-width: 640px) {
-        .yp-bar { flex-direction: column; }
-        .yp-select-group { flex-direction: column; }
-        .yp-divider { width:auto; height:1px; }
+    /* ── Category chips ── */
+    .chip-row {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        justify-content: center;
+        flex-wrap: wrap;
     }
+    .chip-row::-webkit-scrollbar { display: none; }
+    @media (max-width: 480px) {
+        .chip-row { justify-content: flex-start; flex-wrap: nowrap; padding: 0 0 6px; }
+    }
+    .cat-chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 7px 15px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.45);
+        font-family: 'Poppins', sans-serif;
+        font-size: 11px; font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        user-select: none;
+        flex-shrink: 0;
+    }
+    .cat-chip:hover { color: #facc15; border-color: rgba(250,204,21,0.35); background: rgba(250,204,21,0.08); }
+    .cat-chip.active {
+        background: rgba(250,204,21,0.15);
+        border-color: rgba(250,204,21,0.5);
+        color: #facc15;
+        box-shadow: 0 0 12px rgba(250,204,21,0.15);
+    }
+
+    /* ── Status chips ── */
+    .tp-sts-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 14px; border-radius: 999px;
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.45); font-family: 'Poppins', sans-serif;
+        font-size: 11px; font-weight: 500; cursor: pointer;
+        transition: all 0.2s ease; white-space: nowrap; user-select: none; flex-shrink: 0;
+    }
+    .tsdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .tp-sts-chip.ts-all     { background: rgba(250,204,21,0.15); border-color: rgba(250,204,21,0.5);   color: #facc15;  box-shadow: 0 0 12px rgba(250,204,21,0.15); }
+    .tp-sts-chip.ts-visited { background: rgba(34,197,94,0.12);  border-color: rgba(34,197,94,0.45);   color: #86efac;  box-shadow: 0 0 10px rgba(34,197,94,0.1); }
+    .tp-sts-chip.ts-planned { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.45);  color: #93c5fd;  box-shadow: 0 0 10px rgba(59,130,246,0.1); }
+    .tp-sts-chip.ts-not     { background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.45);   color: #fca5a5;  box-shadow: 0 0 10px rgba(239,68,68,0.1); }
+    .tp-sts-chip:not(.ts-all):not(.ts-visited):not(.ts-planned):not(.ts-not):hover {
+        color: #facc15; border-color: rgba(250,204,21,0.3); background: rgba(250,204,21,0.08);
+    }
+
 </style>
 
-<section class="min-h-screen pt-32 pb-24 px-6">
+<section class="min-h-screen pt-32 pb-24 px-4 sm:px-6 max-w-6xl mx-auto">
 
     <!-- Page heading -->
     <div class="text-center mb-12">
@@ -145,92 +209,74 @@
         <p class="text-gray-400 text-base font-[Poppins]">Explore heritage, nature, and sacred places across India</p>
     </div>
 
-    <!-- Search & Filter Bar -->
-    <div class="max-w-7xl mx-auto mb-10">
-        <p style="font-family:'Poppins',sans-serif;font-size:10px;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:rgba(250,204,21,0.45);margin-bottom:10px;padding-left:2px;">
-            Find your sacred path
-        </p>
-        <div class="yp-bar flex gap-3 items-stretch w-full">
-
-            <!-- Search — takes all remaining space -->
-            <div class="yp-glass rounded-2xl flex items-center gap-3 px-4" style="height:52px;flex:1;min-width:0;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(250,204,21,0.45)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input id="search-input" type="text" class="yp-field" placeholder="Search by name or place…" autocomplete="off" style="height:100%;min-width:0;">
-            </div>
-
-            <!-- State filter -->
-            <div class="yp-glass rounded-2xl relative flex items-center" style="flex-shrink:0;">
-                <span class="yp-float-label">State</span>
-                <select id="state-filter" aria-label="Filter by state" class="yp-field"
-                    style="padding:22px 36px 6px 14px;width:160px;appearance:none;-webkit-appearance:none;cursor:pointer;">
-                    <option value="">All States</option>
-                    {% for temple in temples %}
-                        <option value="{{ temple.location }}">{{ temple.location }}</option>
-                    {% endfor %}
-                </select>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(250,204,21,0.4)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;" aria-hidden="true">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </div>
-
-            <!-- Status filter -->
-            <div class="yp-glass rounded-2xl relative flex items-center" style="flex-shrink:0;">
-                <span class="yp-float-label">Status</span>
-                <select id="status-filter" aria-label="Filter by visit status" class="yp-field"
-                    style="padding:22px 36px 6px 14px;width:160px;appearance:none;-webkit-appearance:none;cursor:pointer;">
-                    <option value="">All Statuses</option>
-                    <option value="completed">Visited</option>
-                    <option value="planned">Planned</option>
-                    <option value="not_visited">Not Visited</option>
-                </select>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(250,204,21,0.4)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;" aria-hidden="true">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </div>
-
-            <!-- Clear button -->
-            <button id="clear-btn" onclick="clearFilters()" aria-label="Clear all filters"
-                class="yp-glass"
-                style="height:52px;padding:0 20px;flex-shrink:0;font-family:'Poppins',sans-serif;font-size:12px;font-weight:500;letter-spacing:0.06em;cursor:pointer;display:flex;align-items:center;gap:6px;border-radius:16px;color:rgba(250,204,21,0.45);opacity:0.5;transition:all 0.2s;white-space:nowrap;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-                Clear
-            </button>
+    <!-- Search Bar -->
+    <div class="tp-search-outer mb-5">
+        <div class="tp-search-wrap">
+            <svg class="tp-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="rgba(250,204,21,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input id="search-input" type="text" class="tp-search-input"
+                   placeholder="Search by name or place…" autocomplete="off">
+            <button class="tp-search-clear" onclick="clearTempleSearch()" tabindex="-1">×</button>
         </div>
-
-        <!-- Active filter pills -->
-        <div id="yp-pills" class="flex flex-wrap gap-2 mt-3" aria-live="polite"></div>
-        <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin-top:16px;"></div>
     </div>
 
+    <!-- ── Category chips ── -->
+    <div class="chip-row mb-6 px-1" data-aos="fade-up">
+        <span class="cat-chip active" data-cat="">🌐 All</span>
+        <span class="cat-chip" data-cat="temple">🛕 Temple</span>
+        <span class="cat-chip" data-cat="mountain">⛰️ Mountain</span>
+        <span class="cat-chip" data-cat="beach">🏖️ Beach</span>
+        <span class="cat-chip" data-cat="scenic">🌿 Scenic</span>
+        <span class="cat-chip" data-cat="heritage">🏛️ Heritage</span>
+        <span class="cat-chip" data-cat="other">📍 Other</span>
+    </div>
+
+    <!-- ── Status chips ── -->
+    <div class="flex gap-3 flex-wrap justify-center mb-6 px-1" data-aos="fade-up">
+        <span class="tp-sts-chip ts-all" data-tpstatus="" id="tpstatus-all">✦ All Statuses</span>
+        <span class="tp-sts-chip" data-tpstatus="completed" id="tpstatus-visited">
+            <span class="tsdot" style="background:#4ade80;box-shadow:0 0 6px rgba(74,222,128,0.7);"></span>Visited
+        </span>
+        <span class="tp-sts-chip" data-tpstatus="planned" id="tpstatus-planned">
+            <span class="tsdot" style="background:#60a5fa;box-shadow:0 0 6px rgba(96,165,250,0.7);"></span>Planned
+        </span>
+        <span class="tp-sts-chip" data-tpstatus="not_visited" id="tpstatus-not">
+            <span class="tsdot" style="background:#f87171;box-shadow:0 0 6px rgba(248,113,113,0.7);"></span>Not Visited
+        </span>
+    </div>
+
+    <!-- ── Count ── -->
+    <p id="templeCount"
+       class="text-xs font-[Poppins] tracking-widest uppercase mb-6 text-center"
+       style="color:rgba(250,204,21,0.35);">
+        {{ temples|length }} Destination{{ temples|length|pluralize }}
+    </p>
+
     <!-- No results -->
-    <div id="no-results" class="hidden text-center py-20">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(250,204,21,0.35)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;margin-bottom:14px;" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            <line x1="11" y1="8" x2="11" y2="12"/><line x1="11" y1="16" x2="11.01" y2="16"/>
-        </svg>
-        <p style="font-family:'Playfair Display',serif;font-size:22px;color:rgba(255,255,255,0.8);margin:0 0 6px;">No destinations found</p>
-        <p style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(255,255,255,0.35);margin:0 0 24px;">Try adjusting your filters</p>
-        <button onclick="clearFilters()"
-            style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.35);border-radius:10px;color:#facc15;font-family:'Poppins',sans-serif;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(10px);"
-            onmouseover="this.style.background='rgba(250,204,21,0.15)'"
-            onmouseout="this.style.background='rgba(250,204,21,0.08)'">
-            Reset filters
+    <div id="no-results" style="display:none;text-align:center;padding:5rem 0;color:rgba(255,255,255,0.25);font-family:'Poppins',sans-serif;font-size:14px;">
+        <div style="font-size:2.5rem;margin-bottom:12px;">🛕</div>
+        No destinations match your search.
+        <br>
+        <button onclick="clearTempleSearch()"
+            style="margin-top:14px;padding:8px 22px;border-radius:999px;
+                   background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.3);
+                   color:#facc15;font-family:'Poppins',sans-serif;font-size:12px;cursor:pointer;">
+            Clear search
         </button>
     </div>
 
     <!-- ── Destination Cards Grid ── -->
-    <div id="temples-grid" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-w-7xl mx-auto">
+    <div id="temples-grid" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 
         {% for temple in temples %}
         <a href="{% url 'temple_detail' temple.id %}"
            class="dest-card temple-card"
            data-name="{{ temple.name|lower }}"
            data-location="{{ temple.location|lower }}"
-           data-status="{{ temple.status }}">
+           data-status="{{ temple.status }}"
+           data-cat="{{ temple.category }}">
 
             <!-- Photo -->
             <img src="{{ temple.image.url }}" alt="{{ temple.name }}" loading="lazy">
@@ -288,69 +334,66 @@
 
 <script>
 (function () {
-    const stateFilter = document.getElementById('state-filter');
-    const seen = new Set();
-    Array.from(stateFilter.options).forEach(opt => {
-        if (!opt.value) return;
-        const key = opt.value.trim().toLowerCase();
-        if (seen.has(key)) opt.remove(); else seen.add(key);
-    });
-
     const searchEl  = document.getElementById('search-input');
-    const stateEl   = document.getElementById('state-filter');
-    const statusEl  = document.getElementById('status-filter');
-    const clearBtn  = document.getElementById('clear-btn');
-    const pillsEl   = document.getElementById('yp-pills');
-    const noResults = document.getElementById('no-results');
+    const grid      = document.getElementById('temples-grid');
+    const noRes     = document.getElementById('no-results');
+    const countEl   = document.getElementById('templeCount');
+    const chips     = document.querySelectorAll('.cat-chip');
+    const stsChips  = document.querySelectorAll('.tp-sts-chip');
+    const cards     = document.querySelectorAll('.temple-card');
+    let activeCat    = '';
+    let activeStatus = '';
 
-    const STATUS_META = {
-        completed:   { label: 'Visited',     color: '#4ade80' },
-        planned:     { label: 'Planned',     color: '#60a5fa' },
-        not_visited: { label: 'Not Visited', color: '#f87171' },
-    };
+    function setAllSts() {
+        stsChips.forEach(c => c.classList.remove('ts-all','ts-visited','ts-planned','ts-not'));
+        document.getElementById('tpstatus-all').classList.add('ts-all');
+    }
 
     function run() {
-        const q      = searchEl.value.toLowerCase().trim();
-        const state  = stateEl.value.toLowerCase();
-        const status = statusEl.value;
-        let visible  = 0;
-        document.querySelectorAll('.temple-card').forEach(card => {
-            const match = (!q      || card.dataset.name.includes(q))
-                       && (!state  || card.dataset.location.includes(state))
-                       && (!status || card.dataset.status === status);
-            card.style.display = match ? '' : 'none';
-            if (match) visible++;
+        const q = searchEl.value.toLowerCase().trim();
+        let visible = 0;
+        cards.forEach(card => {
+            const ok = (!q            || card.dataset.name.includes(q) || card.dataset.location.includes(q))
+                    && (!activeCat    || card.dataset.cat === activeCat)
+                    && (!activeStatus || card.dataset.status === activeStatus);
+            card.style.display = ok ? '' : 'none';
+            if (ok) visible++;
         });
-        noResults.classList.toggle('hidden', visible > 0);
-        renderPills(q, stateEl.value, status);
-        const active = q || state || status;
-        clearBtn.style.opacity = active ? '1' : '0.5';
-        clearBtn.style.color   = active ? '#facc15' : 'rgba(250,204,21,0.45)';
+        noRes.style.display  = visible === 0 ? 'block' : 'none';
+        grid.style.display   = visible === 0 ? 'none'  : '';
+        countEl.textContent  = visible + ' Destination' + (visible !== 1 ? 's' : '');
     }
 
-    function renderPills(q, state, status) {
-        pillsEl.innerHTML = '';
-        if (q)      addPill(`"${q}"`, '#facc15', () => { searchEl.value = ''; run(); });
-        if (state)  addPill(state,    '#facc15', () => { stateEl.value  = ''; run(); });
-        if (status) addPill(STATUS_META[status].label, STATUS_META[status].color, () => { statusEl.value = ''; run(); });
-    }
+    chips.forEach(chip => chip.addEventListener('click', () => {
+        chips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeCat = chip.dataset.cat;
+        run();
+    }));
 
-    function addPill(label, color, onRemove) {
-        const span = document.createElement('span');
-        span.className = 'yp-pill';
-        span.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${color};box-shadow:0 0 5px ${color}60;flex-shrink:0;"></span>${label}<button class="yp-pill-x" aria-label="Remove filter">&#x2715;</button>`;
-        span.querySelector('button').addEventListener('click', onRemove);
-        pillsEl.appendChild(span);
-    }
+    stsChips.forEach(chip => chip.addEventListener('click', () => {
+        const val = chip.dataset.tpstatus;
+        if (val === activeStatus && val !== '') { activeStatus = ''; setAllSts(); }
+        else {
+            activeStatus = val;
+            stsChips.forEach(c => c.classList.remove('ts-all','ts-visited','ts-planned','ts-not'));
+            if (val === '')             chip.classList.add('ts-all');
+            else if (val==='completed') chip.classList.add('ts-visited');
+            else if (val==='planned')   chip.classList.add('ts-planned');
+            else                        chip.classList.add('ts-not');
+        }
+        run();
+    }));
 
-    window.clearFilters = function () {
-        searchEl.value = ''; stateEl.value = ''; statusEl.value = '';
+    searchEl.addEventListener('input', run);
+
+    window.clearTempleSearch = function () {
+        searchEl.value = ''; activeCat = ''; activeStatus = '';
+        chips.forEach(c => c.classList.remove('active'));
+        chips[0].classList.add('active');
+        setAllSts();
         run();
     };
-
-    searchEl.addEventListener('input',  run);
-    stateEl.addEventListener('change',  run);
-    statusEl.addEventListener('change', run);
 })();
 </script>
 
