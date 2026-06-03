@@ -106,7 +106,132 @@
         overflow: hidden;
     }
     .yp-popup .leaflet-popup-tip-container { display: none; }
+/* ── Map Style Toggle Button ── */
+    #map-style-toggle {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 1000;
+        background: rgba(10,10,20,0.88);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(245,185,66,0.35);
+        border-radius: 999px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        gap: 0;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        font-family: Poppins, sans-serif;
+    }
 
+    .map-style-btn {
+        background: transparent;
+        border: none;
+        color: #9ca3af;
+        font-size: 11px;
+        font-family: Poppins, sans-serif;
+        font-weight: 600;
+        letter-spacing: .05em;
+        padding: 7px 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .map-style-btn:hover {
+        color: #facc15;
+        background: rgba(245,185,66,0.1);
+    }
+
+    .map-style-btn.active {
+        background: rgba(245,185,66,0.18);
+        color: #facc15;
+        border-radius: 999px;
+    }
+
+    .map-style-divider {
+        width: 1px;
+        height: 16px;
+        background: rgba(255,255,255,0.12);
+        flex-shrink: 0;
+    }
+
+    /* ── Mobile: style toggle pill collapses to icon + dropdown ── */
+    #map-style-mobile-btn {
+        display: none;
+        position: fixed;
+        bottom: 4rem;
+        left: 1rem;
+        z-index: 1001;
+        background: rgba(10,10,20,0.9);
+        border: 1px solid rgba(245,185,66,0.45);
+        border-radius: 999px;
+        padding: 7px 14px;
+        color: #facc15;
+        font-size: 12px;
+        font-family: Poppins, sans-serif;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        letter-spacing: .05em;
+    }
+
+    #map-style-dropdown {
+        display: none;
+        position: fixed;
+        bottom: 7rem;
+        left: 1rem;
+        z-index: 1001;
+        background: rgba(10,10,20,0.95);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(245,185,66,0.25);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+        flex-direction: column;
+        min-width: 140px;
+    }
+
+    #map-style-dropdown.open {
+        display: flex;
+    }
+
+    .map-style-dropdown-item {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        color: #9ca3af;
+        font-size: 12px;
+        font-family: Poppins, sans-serif;
+        font-weight: 600;
+        padding: 10px 16px;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.18s;
+        letter-spacing: .04em;
+    }
+
+    .map-style-dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .map-style-dropdown-item:hover {
+        background: rgba(245,185,66,0.1);
+        color: #facc15;
+    }
+
+    .map-style-dropdown-item.active {
+        background: rgba(245,185,66,0.15);
+        color: #facc15;
+    }
+
+    @media (max-width: 640px) {
+        #map-style-toggle  { display: none; }
+        #map-style-mobile-btn { display: block; }
+    }
     /* ── State tooltip ── */
     .state-label {
         background: rgba(10,10,20,0.8);
@@ -116,6 +241,98 @@
         padding: 3px 8px;
         border-radius: 6px;
         font-family: Poppins, sans-serif;
+    }
+    /* ── State mask overlay ── */
+    .state-label {
+        background: rgba(10,10,20,0.85);
+        border: 1px solid rgba(245,185,66,0.5);
+        color: #fff;
+        font-size: 12px;
+        padding: 5px 12px 5px 8px;
+        border-radius: 8px;
+        font-family: Poppins, sans-serif;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .state-label::before {
+        content: '◄';
+        font-size: 10px;
+        color: #facc15;
+        display: none;
+    }
+
+    .state-label.active::before {
+        display: inline;
+    }
+    /* ── Locate Me Button ── */
+    #locate-btn {
+        position: fixed;
+        bottom: 2rem;
+        right: 4rem;
+        z-index: 1000;
+        background: rgba(10,10,20,0.88);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(245,185,66,0.35);
+        border-radius: 999px;
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        transition: all 0.2s ease;
+    }
+
+    #locate-btn:hover {
+        border-color: #facc15;
+        background: rgba(245,185,66,0.15);
+    }
+
+    #locate-btn.active {
+        border-color: #22c55e;
+        background: rgba(34,197,94,0.15);
+    }
+
+    /* ── Pulsing user location dot ── */
+    .user-location-pin {
+        position: relative;
+        width: 16px;
+        height: 16px;
+    }
+
+    .user-location-pin .dot {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 12px; height: 12px;
+        background: #3b82f6;
+        border: 2.5px solid #fff;
+        border-radius: 50%;
+        box-shadow: 0 0 6px rgba(59,130,246,0.8);
+        z-index: 2;
+    }
+
+    .user-location-pin .pulse {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 12px; height: 12px;
+        background: rgba(59,130,246,0.4);
+        border-radius: 50%;
+        animation: locpulse 1.8s ease-out infinite;
+    }
+
+    @keyframes locpulse {
+        0%   { transform: translate(-50%,-50%) scale(1);   opacity: 0.8; }
+        100% { transform: translate(-50%,-50%) scale(3.5); opacity: 0; }
     }
 </style>
 
@@ -153,6 +370,27 @@
 
     <!-- Mobile legend toggle button -->
     <button id="legend-toggle">🗺 Legend</button>
+    <!-- Locate Me Button -->
+    <button id="locate-btn" title="Show my location">📍</button>
+<!-- Map Style Toggle — desktop pill -->
+    <div id="map-style-toggle">
+        <button class="map-style-btn active" data-style="dark">🌑 Dark</button>
+        <div class="map-style-divider"></div>
+        <button class="map-style-btn" data-style="light">🗺️ OSM</button>
+        <div class="map-style-divider"></div>
+        <button class="map-style-btn" data-style="satellite">🛰️ Satellite</button>
+        <div class="map-style-divider"></div>
+        <button class="map-style-btn" data-style="terrain">🏔️ Terrain</button>
+    </div>
+
+    <!-- Map Style Toggle — mobile icon button + dropdown -->
+    <button id="map-style-mobile-btn">🌑 Dark ▾</button>
+    <div id="map-style-dropdown">
+        <button class="map-style-dropdown-item active" data-style="dark">🌑 Dark</button>
+        <button class="map-style-dropdown-item" data-style="light">🗺️ OSM</button>
+        <button class="map-style-dropdown-item" data-style="satellite">🛰️ Satellite</button>
+        <button class="map-style-dropdown-item" data-style="terrain">🏔️ Terrain</button>
+    </div>
 </div>
 
 <script>
@@ -168,26 +406,115 @@ document.addEventListener("DOMContentLoaded", function () {
     // ── Mobile legend toggle ──────────────────────────────
     const legendToggle = document.getElementById('legend-toggle');
     const legend       = document.getElementById('map-legend');
-    if (legendToggle) {
+if (legendToggle) {
         legendToggle.addEventListener('click', function() {
             legend.classList.toggle('open');
-            legendToggle.textContent = legend.classList.contains('open') ? '✕ Close' : '🗺 Legend';
+            const isOpen = legend.classList.contains('open');
+            legendToggle.textContent = isOpen ? '✕ Close' : '🗺 Legend';
+
+            // Hide/show the map style toggle when legend opens/closes
+            const styleToggle  = document.getElementById('map-style-toggle');
+            const styleMobile  = document.getElementById('map-style-mobile-btn');
+            const styleDropdown = document.getElementById('map-style-dropdown');
+
+            if (isOpen) {
+                if (styleToggle)   styleToggle.style.display  = 'none';
+                if (styleMobile)   styleMobile.style.display  = 'none';
+                if (styleDropdown) styleDropdown.classList.remove('open');
+            } else {
+                if (styleToggle)  styleToggle.style.display  = '';
+                if (styleMobile)  styleMobile.style.display  = '';
+            }
         });
     }
 
-    // ── Map init ──────────────────────────────────────────
-    var map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
+// ── Map init ──────────────────────────────────────────
+    const mapContainer = document.getElementById('map');
+    if (mapContainer._leaflet_id) {
+        mapContainer._leaflet_id = null;
+    }
+    window.map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // ── Dark tile layer (CartoDB — free, no key) ──────────
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20,
-    }).addTo(map);
+// ── Tile layer definitions ────────────────────────────
+    const TILE_LAYERS = {
+        dark: {
+            url:  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+            opts: { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 20 },
+        },
+        light: {
+            url:  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            opts: { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains: 'abc', maxZoom: 19 },
+        },
+        satellite: {
+            url:  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            opts: { attribution: '&copy; Esri', maxZoom: 19 },
+        },
+        terrain: {
+            url:  'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+            opts: { attribution: '&copy; OpenStreetMap &copy; OpenTopoMap', maxZoom: 17 },
+        },
+    };
 
-    // ── State borders (deep red, fallback chain) ──────────
-    const BORDER_STYLE = { color: '#ca8a04', weight: 1.5, opacity: 0.3, fillOpacity: 0 };
+    var currentTileLayer = L.tileLayer(TILE_LAYERS.dark.url, TILE_LAYERS.dark.opts).addTo(map);
+
+// ── Map style toggle wiring ───────────────────────────
+    const STYLE_LABELS = { dark: '🌑 Dark', light: '🗺️ OSM', satellite: '🛰️ Satellite', terrain: '🏔️ Terrain' };
+
+    function applyMapStyle(style) {
+        if (!TILE_LAYERS[style]) return;
+        map.removeLayer(currentTileLayer);
+        currentTileLayer = L.tileLayer(TILE_LAYERS[style].url, TILE_LAYERS[style].opts).addTo(map);
+
+        // Update desktop pill
+        document.querySelectorAll('.map-style-btn').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.style === style);
+        });
+
+        // Update mobile dropdown items
+        document.querySelectorAll('.map-style-dropdown-item').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.style === style);
+        });
+
+        // Update mobile button label
+        const mobileBtn = document.getElementById('map-style-mobile-btn');
+        if (mobileBtn) mobileBtn.textContent = STYLE_LABELS[style] + ' ▾';
+
+        // Close dropdown
+        const dropdown = document.getElementById('map-style-dropdown');
+        if (dropdown) dropdown.classList.remove('open');
+    }
+
+    document.querySelectorAll('.map-style-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { applyMapStyle(this.dataset.style); });
+    });
+
+    document.querySelectorAll('.map-style-dropdown-item').forEach(function(btn) {
+        btn.addEventListener('click', function() { applyMapStyle(this.dataset.style); });
+    });
+
+    // Mobile toggle button opens/closes dropdown
+    const mobileStyleBtn = document.getElementById('map-style-mobile-btn');
+    const styleDropdown  = document.getElementById('map-style-dropdown');
+    if (mobileStyleBtn && styleDropdown) {
+        mobileStyleBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            styleDropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', function() {
+            styleDropdown.classList.remove('open');
+        });
+    }
+
+// ── State borders + filter ────────────────────────────
+    const BORDER_STYLE         = { color: '#ca8a04', weight: 1.5, opacity: 0.4, fillOpacity: 0 };
+    const BORDER_STYLE_ACTIVE  = { color: '#facc15', weight: 2.5, opacity: 0.9, fillOpacity: 0 };
+    const BORDER_STYLE_DIMMED  = { color: '#ca8a04', weight: 1,   opacity: 0.1, fillOpacity: 0.55, fillColor: '#000' };
+
+    var activeState     = null;   // currently selected state name
+    var maskLayer       = null;   // dark fill layer for non-selected states
+    var stateLayerMap   = {};     // stateName → leaflet layer
+    var allStateData    = null;   // full geojson
 
     const geoSources = [
         'https://raw.githubusercontent.com/geohacker/india/master/state/india_telengana.geojson',
@@ -195,23 +522,167 @@ document.addEventListener("DOMContentLoaded", function () {
         'https://raw.githubusercontent.com/Arun-George-Zachariah/India-State-Boundary-GeoJson/master/india_state.geojson',
     ];
 
+    function getStateName(feat) {
+        return feat.properties && (feat.properties.NAME_1 || feat.properties.name || feat.properties.ST_NM);
+    }
+
+    function isMarkerInState(marker, stateFeature) {
+        const pt  = marker.getLatLng();
+        const pip = L.geoJSON(stateFeature);
+        // point-in-polygon using leaflet bounds + ray casting
+        return isPointInFeature([pt.lat, pt.lng], stateFeature);
+    }
+
+function isPointInFeature(latLng, feature) {
+        // GeoJSON is [lng, lat] — ray-cast with axes correctly assigned
+        const [lat, lng] = latLng;
+        const coords = [];
+
+        function collectRings(geom) {
+            if (geom.type === 'Polygon') coords.push(...geom.coordinates);
+            else if (geom.type === 'MultiPolygon') geom.coordinates.forEach(p => coords.push(...p));
+        }
+        collectRings(feature.geometry);
+
+        return coords.some(function(ring) {
+            let inside = false;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const xi = ring[i][0], yi = ring[i][1];   // xi = lng, yi = lat in GeoJSON
+                const xj = ring[j][0], yj = ring[j][1];
+                if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        });
+    }
+// ── Build an inverse mask (world rectangle minus the state shape) ──
+    function buildMaskLayer(feature) {
+        // World bounding box as outer ring
+        const world = [
+            [-90, -180], [-90, 180], [90, 180], [90, -180], [-90, -180]
+        ];
+
+        // Extract all rings from the state feature (handles Polygon + MultiPolygon)
+        const holes = [];
+        function extractRings(geom) {
+            if (geom.type === 'Polygon') {
+                geom.coordinates.forEach(function(ring) {
+                    // GeoJSON is [lng,lat], Leaflet expects [lat,lng]
+                    holes.push(ring.map(function(c) { return [c[1], c[0]]; }));
+                });
+            } else if (geom.type === 'MultiPolygon') {
+                geom.coordinates.forEach(function(poly) {
+                    poly.forEach(function(ring) {
+                        holes.push(ring.map(function(c) { return [c[1], c[0]]; }));
+                    });
+                });
+            }
+        }
+        extractRings(feature.geometry);
+
+        return L.polygon([world, ...holes], {
+            color:       'none',
+            fillColor:   '#000',
+            fillOpacity: 0.65,
+            interactive: false,
+            pane:        'overlayPane',
+        });
+    }
+function enterState(stateName, feature, layer) {
+        if (activeState === stateName) { exitState(); return; }
+        activeState = stateName;
+
+        // Remove old mask if any
+        if (maskLayer) { map.removeLayer(maskLayer); maskLayer = null; }
+
+        // Add full-map dark mask with hole cut out for selected state
+        maskLayer = buildMaskLayer(feature).addTo(map);
+
+        // Highlight selected state border, reset others
+        Object.entries(stateLayerMap).forEach(function([name, l]) {
+            if (name === stateName) {
+                l.setStyle(BORDER_STYLE_ACTIVE);
+            } else {
+                l.setStyle(BORDER_STYLE);
+            }
+        });
+        // Show only markers inside this state
+        markers.forEach(function(m) {
+            if (isPointInFeature([m.getLatLng().lat, m.getLatLng().lng], feature)) {
+                m.addTo(map);
+            } else {
+                map.removeLayer(m);
+            }
+        });
+
+        // Zoom to state bounds
+        const bounds = layer.getBounds();
+        map.fitBounds(bounds, { padding: [40, 40] });
+
+        // Update tooltip to show back arrow
+        layer.closeTooltip();
+        layer.bindTooltip('◄  ' + stateName, {
+            permanent: false,
+            className: 'state-label',
+            sticky: false,
+        });
+    }
+
+    function exitState() {
+        activeState = null;
+
+        // Remove full-map mask
+        if (maskLayer) { map.removeLayer(maskLayer); maskLayer = null; }
+
+        // Reset all border styles
+        Object.values(stateLayerMap).forEach(function(l) {
+            l.setStyle(BORDER_STYLE);
+        });
+
+        // Re-bind normal tooltips
+        Object.entries(stateLayerMap).forEach(function([name, l]) {
+            l.closeTooltip();
+            l.bindTooltip(name, { permanent: false, className: 'state-label' });
+        });
+
+        // Show all markers
+        markers.forEach(function(m) { m.addTo(map); });
+
+        // Zoom back to India
+        var group = new L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.25));
+    }
+
     function tryLoadBorders(i) {
         if (i >= geoSources.length) { console.log('[Map] All border sources failed'); return; }
         fetch(geoSources[i])
             .then(r => { if (!r.ok) throw new Error(); return r.json(); })
             .then(data => {
+                allStateData = data;
                 L.geoJSON(data, {
                     style: BORDER_STYLE,
                     onEachFeature: function(feat, layer) {
-                        const n = feat.properties && (feat.properties.NAME_1 || feat.properties.name || feat.properties.ST_NM);
-                        if (n) layer.bindTooltip(n, { permanent: false, className: 'state-label' });
+                        const name = getStateName(feat);
+                        if (!name) return;
+
+                        stateLayerMap[name] = layer;
+
+                        layer.bindTooltip(name, { permanent: false, className: 'state-label' });
+
+                        layer.on('click', function() {
+                            if (activeState === name) {
+                                exitState();
+                            } else {
+                                enterState(name, feat, layer);
+                            }
+                        });
                     }
                 }).addTo(map);
             })
             .catch(() => tryLoadBorders(i + 1));
     }
     tryLoadBorders(0);
-
     // ── Pin-shaped emoji markers ──────────────────────────
     const STATUS_COLOR = {
         'completed':   '#22c55e',
@@ -228,7 +699,7 @@ document.addEventListener("DOMContentLoaded", function () {
         'other':    '📍',
     };
 
-    function makePinIcon(category, status) {
+function makePinIcon(category, status) {
         const emoji = CATEGORY_EMOJI[category] || '📍';
         const color = STATUS_COLOR[status]      || '#ef4444';
         return L.divIcon({
@@ -236,20 +707,19 @@ document.addEventListener("DOMContentLoaded", function () {
             html: `
                 <div class="yp-pin">
                     <div class="yp-pin-head" style="
-                        background: ${color}28;
-                        border: 2px solid ${color}cc;
-                        box-shadow: 0 0 10px ${color}55, inset 0 0 8px ${color}18;
+                        background: ${color}ee;
+                        border: 2.5px solid #fff;
+                        box-shadow: 0 0 0 1.5px ${color}, 0 4px 12px rgba(0,0,0,0.45);
                     ">
                         <span>${emoji}</span>
                     </div>
-                    <div class="yp-pin-tail" style="background:${color}cc;"></div>
+                    <div class="yp-pin-tail" style="background:${color};box-shadow:0 1px 3px rgba(0,0,0,0.4);"></div>
                 </div>`,
             iconSize:    [26, 37],
             iconAnchor:  [13, 37],
             popupAnchor: [0, -39],
         });
     }
-
     // ── Temple data ───────────────────────────────────────
     const temples = [
         {% for temple in all_temples %}
@@ -315,6 +785,75 @@ document.addEventListener("DOMContentLoaded", function () {
         map.fitBounds(group.getBounds().pad(0.25));
     }
 });
+// ── Locate Me ─────────────────────────────────────────
+    var userLocMarker = null;
+
+    const locateBtn = document.getElementById('locate-btn');
+
+    function makeUserIcon() {
+        return L.divIcon({
+            className: '',
+            html: `<div class="user-location-pin">
+                       <div class="pulse"></div>
+                       <div class="dot"></div>
+                   </div>`,
+            iconSize:   [16, 16],
+            iconAnchor: [8, 8],
+        });
+    }
+
+    if (locateBtn) {
+        locateBtn.addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+
+            locateBtn.textContent = '⏳';
+
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+
+                    // Remove old marker if exists
+                    if (userLocMarker) window.map.removeLayer(userLocMarker);
+
+                    userLocMarker = L.marker([lat, lng], { icon: makeUserIcon(), zIndexOffset: 9999 })
+                        .addTo(window.map)
+                        .bindPopup(`
+                            <div style="font-family:Poppins,sans-serif;font-size:13px;
+                                color:#fff;background:rgba(10,10,20,0.95);
+                                padding:10px 14px;border-radius:12px;
+                                border:1px solid rgba(59,130,246,0.4);
+                                box-shadow:0 4px 20px rgba(0,0,0,0.6);">
+                                📍 <strong>You are here</strong><br>
+                                <span style="font-size:11px;color:#9ca3af;">
+                                    ${lat.toFixed(5)}, ${lng.toFixed(5)}
+                                </span>
+                            </div>`, {
+                            className: 'yp-popup',
+                            maxWidth: 220,
+                        })
+                        .openPopup();
+
+                    window.map.setView([lat, lng], 10, { animate: true });
+
+                    locateBtn.textContent = '📍';
+                    locateBtn.classList.add('active');
+                },
+                function(err) {
+                    locateBtn.textContent = '📍';
+                    let msg = 'Could not get your location.';
+                    if (err.code === 1) msg = 'Location permission denied.';
+                    if (err.code === 2) msg = 'Location unavailable.';
+                    if (err.code === 3) msg = 'Location request timed out.';
+                    alert(msg);
+                },
+                { timeout: 10000, enableHighAccuracy: true }
+            );
+        });
+    }
 </script>
 
 {% endblock %}
