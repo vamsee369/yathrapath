@@ -434,6 +434,12 @@ if (legendToggle) {
         mapContainer._leaflet_id = null;
     }
     window.map = L.map('map', { zoomControl: false }).setView([20.5937, 78.9629], 5);
+
+    // Create a dedicated pane for the mask so it sits above tiles but below markers/borders
+    map.createPane('maskPane');
+    map.getPane('maskPane').style.zIndex = 350;          // below overlayPane (400) = below borders
+    map.getPane('maskPane').style.pointerEvents = 'none'; // never block clicks
+
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
 // ── Tile layer definitions ────────────────────────────
@@ -507,9 +513,9 @@ if (legendToggle) {
     }
 
 // ── State borders + filter ────────────────────────────
-    const BORDER_STYLE         = { color: '#ca8a04', weight: 1.5, opacity: 0.4, fillOpacity: 0 };
-    const BORDER_STYLE_ACTIVE  = { color: '#facc15', weight: 2.5, opacity: 0.9, fillOpacity: 0 };
-    const BORDER_STYLE_DIMMED  = { color: '#ca8a04', weight: 1,   opacity: 0.1, fillOpacity: 0.55, fillColor: '#000' };
+    const BORDER_STYLE         = { color: '#ca8a04', weight: 1.5, opacity: 0.4,  fillOpacity: 0,    fill: false };
+    const BORDER_STYLE_ACTIVE  = { color: '#facc15', weight: 2.5, opacity: 0.9,  fillOpacity: 0,    fill: false };
+    const BORDER_STYLE_DIMMED  = { color: '#ca8a04', weight: 1,   opacity: 0.1,  fillOpacity: 0.55, fillColor: '#000' };
 
     var activeState     = null;   // currently selected state name
     var maskLayer       = null;   // dark fill layer for non-selected states
@@ -586,23 +592,27 @@ function isPointInFeature(latLng, feature) {
             fillColor:   '#000',
             fillOpacity: 0.65,
             interactive: false,
-            pane:        'overlayPane',
+            pane:        'maskPane',
         });
     }
 function enterState(stateName, feature, layer) {
         if (activeState === stateName) { exitState(); return; }
         activeState = stateName;
 
-        // Remove old mask if any
-        if (maskLayer) { map.removeLayer(maskLayer); maskLayer = null; }
+        // Remove old mask if any (force-remove to avoid ghost layers)
+        if (maskLayer) {
+            try { map.removeLayer(maskLayer); } catch(e) {}
+            maskLayer = null;
+        }
 
         // Add full-map dark mask with hole cut out for selected state
         maskLayer = buildMaskLayer(feature).addTo(map);
 
-        // Highlight selected state border, reset others
+        // Highlight selected state border, reset others — then bring active to front above mask
         Object.entries(stateLayerMap).forEach(function([name, l]) {
             if (name === stateName) {
                 l.setStyle(BORDER_STYLE_ACTIVE);
+                l.bringToFront();
             } else {
                 l.setStyle(BORDER_STYLE);
             }
@@ -632,12 +642,16 @@ function enterState(stateName, feature, layer) {
     function exitState() {
         activeState = null;
 
-        // Remove full-map mask
-        if (maskLayer) { map.removeLayer(maskLayer); maskLayer = null; }
+        // Remove full-map mask — force remove even if reference is stale
+        if (maskLayer) {
+            try { map.removeLayer(maskLayer); } catch(e) {}
+            maskLayer = null;
+        }
 
         // Reset all border styles
         Object.values(stateLayerMap).forEach(function(l) {
             l.setStyle(BORDER_STYLE);
+            l.bringToFront();
         });
 
         // Re-bind normal tooltips
@@ -649,9 +663,18 @@ function enterState(stateName, feature, layer) {
         // Show all markers
         markers.forEach(function(m) { m.addTo(map); });
 
-        // Zoom back to India
-        var group = new L.featureGroup(markers);
-        map.fitBounds(group.getBounds().pad(0.25));
+        // Zoom back to India — guard against empty markers array
+        if (markers.length > 0) {
+            var group = new L.featureGroup(markers);
+            var bounds = group.getBounds();
+            if (bounds.isValid()) {
+                map.fitBounds(bounds.pad(0.25), { animate: true });
+            } else {
+                map.setView([20.5937, 78.9629], 5, { animate: true });
+            }
+        } else {
+            map.setView([20.5937, 78.9629], 5, { animate: true });
+        }
     }
 
     function tryLoadBorders(i) {
@@ -660,8 +683,11 @@ function enterState(stateName, feature, layer) {
             .then(r => { if (!r.ok) throw new Error(); return r.json(); })
             .then(data => {
                 allStateData = data;
+                // Use canvas renderer for performance (no SVG lag with many polygons)
+                const canvasRenderer = L.canvas({ padding: 0.5 });
                 L.geoJSON(data, {
-                    style: BORDER_STYLE,
+                    renderer: canvasRenderer,
+                    style: function() { return BORDER_STYLE; },   // function form prevents Leaflet flash
                     onEachFeature: function(feat, layer) {
                         const name = getStateName(feat);
                         if (!name) return;
