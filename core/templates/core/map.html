@@ -626,9 +626,9 @@ function enterState(stateName, feature, layer) {
             else { map.removeLayer(m); }
         });
 
-        // Zoom to state bounds
+        // Zoom to state bounds — fill screen maximally
         const bounds = layer.getBounds();
-        map.fitBounds(bounds, { padding: [40, 40] });
+        map.fitBounds(bounds, { padding: [8, 8], animate: true, maxZoom: 18 });
 
         // Update tooltip to show back arrow
         layer.closeTooltip();
