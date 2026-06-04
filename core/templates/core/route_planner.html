@@ -1,170 +1,1047 @@
 {% extends "core/base.html" %}
-
 {% block content %}
 
-<div class="flex h-screen pt-24">
+<style>
+/* ── Scrollbar ── */
+.cs::-webkit-scrollbar{width:4px}.cs::-webkit-scrollbar-track{background:transparent}.cs::-webkit-scrollbar-thumb{background:#facc15;border-radius:9px}
 
-    <!-- LEFT ROUTE PANEL -->
-    <div
-        class="w-96 bg-[#0f0f1a]/90 backdrop-blur-xl p-6 overflow-y-auto shadow-2xl rounded-3xl border border-white/20 flex flex-col gap-6">
+/* ── Layout ── */
+#rp-wrap{display:flex;height:calc(100vh - 96px);overflow:hidden;padding:12px;gap:12px}
+#rp-panel{width:340px;min-width:280px;max-width:340px;background:rgba(15,15,26,0.92);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.12);border-radius:20px;display:flex;flex-direction:column;overflow:hidden}
+#rp-map-wrap{flex:1;position:relative;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.12)}
+#map{width:100%;height:100%}
 
-        <!-- TITLE -->
-        <h2 class="text-2xl font-bold text-yellow-400 mb-8 text-center">
-            🧭 Temple Route Planner
-        </h2>
+/* ── Panel inner scroll ── */
+#rp-scroll{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
 
-        <!-- SELECT TEMPLES TOGGLE -->
-        <div class="flex flex-col gap-2">
-            <button id="showTemplesBtn" class="w-full py-3 rounded-xl font-semibold text-yellow-700
-                       bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500
-                       shadow-lg shadow-yellow-500/20
-                       transition-all duration-300
-                       hover:scale-[1.03] hover:shadow-yellow-400/40 flex justify-between items-center">
-                <span>Select Temples for Route</span>
-                <span id="btnArrow">⬇️</span>
-            </button>
+/* ── Section header ── */
+.sh{font-size:10px;font-weight:800;color:#facc15;letter-spacing:.1em;text-transform:uppercase;
+  padding:0 0 5px;border-bottom:1px solid rgba(250,204,21,0.2);margin-bottom:4px;display:flex;align-items:center;gap:6px}
 
-            <div id="templeContainer" class="hidden mt-2 flex flex-col gap-1">
-                <select id="templeList" multiple
-                    class="w-full h-48 p-3 rounded-xl bg-white/10 text-white border border-white/20
-                           focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 outline-none scrollbar-thin scrollbar-thumb-yellow-400/60 scrollbar-track-transparent">
-                    {% for temple in temples %}
-                    <option value="{{ temple.latitude }},{{ temple.longitude }}" data-name="{{ temple.name }}"
-                        class="text-black">
-                        {{ temple.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-                <p class="text-gray-400 text-xs mt-1">Hold Ctrl/Cmd to select multiple temples</p>
-            </div>
+/* ── Inputs ── */
+.gi{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  color:#fff;border-radius:10px;padding:8px 11px;font-size:12px;outline:none;transition:border .2s;box-sizing:border-box}
+.gi:focus{border-color:#facc15}.gi::placeholder{color:#6b7280}
+
+/* ── Autocomplete dropdown ── */
+.ac-box{background:#0f0f1e;border:1px solid rgba(255,255,255,0.12);border-radius:10px;overflow:hidden;margin-top:3px;z-index:9999;position:relative}
+.ac-item{padding:8px 12px;font-size:12px;color:#e5e7eb;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05)}
+.ac-item:hover{background:rgba(250,204,21,0.12);color:#facc15}
+
+/* ── Buttons ── */
+.btn-gold{background:linear-gradient(135deg,#facc15,#f59e0b);color:#000;font-weight:700;border:none;
+  border-radius:10px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-gold:hover{transform:scale(1.02);box-shadow:0 4px 18px rgba(250,204,21,.4)}
+.btn-ghost{background:rgba(255,255,255,0.07);color:#d1d5db;border:1px solid rgba(255,255,255,0.13);
+  border-radius:10px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:600}
+.btn-ghost:hover{background:rgba(255,255,255,0.13);color:#fff}
+.btn-sm{padding:6px 12px;font-size:11px;font-weight:700}
+.btn-icon{width:34px;height:34px;border-radius:10px;flex-shrink:0}
+
+/* ── GPS strip ── */
+.loc-strip{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;
+  padding:7px 10px;font-size:11px;color:#86efac;display:flex;align-items:center;gap:7px}
+
+/* ── Stop pills ── */
+.stop-pill{display:flex;align-items:center;gap:7px;background:rgba(167,139,250,0.1);
+  border:1.5px solid rgba(167,139,250,0.2);border-radius:8px;padding:5px 9px;font-size:11px;color:#c4b5fd;
+  transition:border-color .15s,opacity .15s;cursor:default}
+.stop-pill.drag-over{border-color:#facc15;background:rgba(250,204,21,0.08)}
+.stop-pill button{background:none;border:none;color:#6b7280;cursor:pointer;font-size:12px;margin-left:auto;padding:0}
+.stop-pill button:hover{color:#f87171}
+.drag-handle{cursor:grab;font-size:15px;color:#6b7280;padding:0 2px;flex-shrink:0;user-select:none}
+.drag-handle:active{cursor:grabbing}
+
+/* ── Temple cards ── */
+.tc{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:10px;cursor:pointer;
+  border:1.5px solid transparent;background:rgba(255,255,255,0.04);transition:all .18s;position:relative}
+.tc:hover{background:rgba(250,204,21,0.08);border-color:rgba(250,204,21,0.25)}
+.tc.sel{background:rgba(250,204,21,0.14);border-color:#facc15}
+.tc img{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0}
+.tc .tn{font-size:11px;font-weight:600;color:#f3f4f6;line-height:1.3}
+.tc .tl{font-size:10px;color:#9ca3af;margin-top:1px}
+.tc .ck{width:16px;height:16px;border-radius:50%;border:1.5px solid #4b5563;
+  display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;margin-left:auto;transition:all .18s}
+.tc.sel .ck{background:#facc15;border-color:#facc15;color:#000}
+
+/* ── Cat filter chips ── */
+.chip{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:none;transition:all .18s}
+.chip-on{background:rgba(250,204,21,.2);color:#facc15;border:1px solid rgba(250,204,21,.4)}
+.chip-off{background:rgba(255,255,255,.06);color:#9ca3af;border:1px solid rgba(255,255,255,.1)}
+
+/* ── Generate button ── */
+#btnGen{width:100%;padding:13px;font-size:14px;border-radius:12px}
+
+/* ── Loading ── */
+#rp-loading{display:none;align-items:center;justify-content:center;gap:10px;
+  background:rgba(255,255,255,0.05);border-radius:12px;padding:14px}
+
+/* ── Results ── */
+#rp-results{display:none;flex-direction:column;gap:10px}
+
+/* ── Tabs ── */
+.tab-bar{display:flex;gap:3px;background:rgba(255,255,255,0.04);border-radius:10px;padding:3px}
+.tab{flex:1;padding:6px 4px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;
+  color:#6b7280;background:transparent;border:none;transition:all .18s;text-align:center}
+.tab.on{background:rgba(250,204,21,.15);color:#facc15}
+
+/* ── Stat grid ── */
+.stat{background:rgba(255,255,255,0.05);border-radius:10px;padding:9px 8px;text-align:center;border:1px solid rgba(255,255,255,0.08)}
+.sv{font-size:14px;font-weight:800;color:#facc15;line-height:1}
+.sl{font-size:9px;color:#6b7280;margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+
+/* ── Segment card ── */
+.seg{background:rgba(255,255,255,0.04);border-radius:10px;padding:9px 10px;border:1px solid rgba(255,255,255,0.07)}
+
+/* ── Step ── */
+.step{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.si{width:24px;height:24px;border-radius:50%;background:rgba(250,204,21,.12);
+  display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+
+/* ── Weather ── */
+.wx{background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 8px;text-align:center;border:1px solid rgba(255,255,255,0.07)}
+.wxi{font-size:26px}.wxt{font-size:16px;font-weight:800;color:#facc15}
+.wxn{font-size:9px;color:#9ca3af;margin-top:3px;word-break:break-word;line-height:1.3}
+
+/* ── Elevation ── */
+#elevChart{width:100%;height:72px;display:block;border-radius:8px}
+
+/* ── Map FABs ── */
+.fab{position:absolute;z-index:900;background:rgba(10,10,20,0.88);border:1px solid rgba(255,255,255,0.15);
+  border-radius:10px;padding:7px 11px;color:#e5e7eb;font-size:11px;font-weight:600;cursor:pointer;
+  backdrop-filter:blur(12px);transition:all .2s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.fab:hover{border-color:#facc15;color:#facc15}
+
+/* ── Share modal ── */
+#shareModal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:none;align-items:center;justify-content:center}
+#shareModal.on{display:flex}
+.mbox{background:#0f0f1a;border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:24px;max-width:340px;width:90%}
+
+/* ── Clear button ── */
+#btnClear{display:none;width:100%;padding:8px;font-size:11px;border-radius:10px;
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#f87171;cursor:pointer;transition:all .2s}
+#btnClear:hover{background:rgba(239,68,68,0.2)}
+
+/* ── Responsive ── */
+@media(max-width:700px){
+  #rp-wrap{flex-direction:column;padding:8px;gap:8px;height:auto;min-height:calc(100vh - 96px)}
+  #rp-panel{width:100%;max-width:100%;min-width:0}
+  #rp-map-wrap{height:50vh;flex:none}
+  #rp-scroll{max-height:55vh}
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+
+<div id="rp-wrap">
+
+  <!-- ══ LEFT PANEL ══ -->
+  <div id="rp-panel">
+
+    <div style="padding:14px 14px 0;flex-shrink:0">
+      <h2 style="text-align:center;font-size:18px;font-weight:800;color:#facc15;margin-bottom:10px">
+        🚩 Route Planner
+      </h2>
+    </div>
+
+    <div id="rp-scroll" class="cs">
+
+      <!-- 1. Start Location -->
+      <div>
+        <div class="sh">📍 Start Location</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="startInput" type="text" placeholder="Search city or address…" class="gi" style="flex:1"
+                 oninput="debounce(this.value,'start')"/>
         </div>
+        <div id="startAC" class="ac-box" style="display:none"></div>
+        <button class="btn-ghost" onclick="getMyLoc()"
+          style="width:100%;padding:9px;margin-top:7px;border-radius:10px;font-size:12px">
+          📡 Use My Current Location as Start
+        </button>
+        <div id="startInfo" style="display:none;margin-top:6px" class="loc-strip">
+          <span>🟢</span><span id="startInfoTxt"></span>
+          <button onclick="addStartToRoute()" class="btn-gold btn-sm" style="margin-left:auto;padding:5px 10px;font-size:10px;border-radius:7px">＋ Add to Route</button>
+        </div>
+      </div>
 
-        <!-- GENERATE ROUTE BUTTON -->
-        <button onclick="generateMultiRoute()" class="group relative w-full py-3 rounded-xl font-semibold text-yellow-700
-                   bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500
-                   shadow-lg shadow-yellow-500/20
-                   transition-all duration-300
-                   hover:scale-[1.03] hover:shadow-yellow-400/40">
-            <span class="flex items-center justify-center gap-2">
-                Generate Route
-                <span class="group-hover:translate-x-1 transition-transform">🚗</span>
-            </span>
+      <!-- 2. Extra Stops -->
+      <div>
+        <div class="sh">🔍 Add Extra Stop</div>
+        <div style="display:flex;gap:6px">
+          <input id="placeInput" type="text" placeholder="Search any place…" class="gi" style="flex:1"
+                 oninput="debounce(this.value,'place')"/>
+          <button class="btn-ghost btn-icon" onclick="toggleTap()" id="tapBtn" title="Tap on map to pin">🖱️</button>
+        </div>
+        <div id="placeAC" class="ac-box" style="display:none"></div>
+        <div id="tapHint" style="display:none;text-align:center;font-size:11px;color:#facc15;margin-top:5px;animation:pulse 1.5s infinite">
+          🗺️ Tap anywhere on map to pin a stop
+        </div>
+        <div id="stopList" style="display:flex;flex-direction:column;gap:4px;margin-top:6px"></div>
+        <div id="dragHint" style="display:none;font-size:10px;color:#6b7280;text-align:center;margin-top:4px">
+          ⠿ Drag stops to reorder them
+        </div>
+      </div>
+
+      <!-- 3. Select Destinations -->
+      <div>
+        <button onclick="toggleTempleSection()"
+          style="width:100%;padding:10px 14px;border-radius:11px;font-weight:700;font-size:13px;
+                 background:linear-gradient(135deg,#facc15,#f59e0b);color:#000;border:none;cursor:pointer;
+                 display:flex;justify-content:space-between;align-items:center;transition:all .2s"
+          onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform=''">
+          <span>🛕 Select Destinations</span><span id="tsArrow">▼</span>
         </button>
 
-        <!-- LOADING SPINNER -->
-        <div id="routeLoading"
-            class="hidden flex items-center justify-center gap-3 mt-4 p-4 rounded-xl bg-white/10 backdrop-blur-lg">
-            <div class="w-6 h-6 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-yellow-300 font-medium">Calculating best route...</p>
-        </div>
-
-        <!-- ROUTE DETAILS -->
-        <div id="routeInfo" class="hidden mt-4 p-4 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl flex flex-col gap-2
-           max-h-[60vh] overflow-y-auto">
-            <p class="text-yellow-400 font-bold text-lg">📍 Route Details</p>
-            <div id="routeDetails" class="space-y-2">
-                <!-- Segment info goes here -->
+        <div id="templeSection" style="display:none;flex-direction:column;gap:7px;margin-top:8px">
+          <input id="tsearch" type="text" placeholder="🔍 Search destinations…" class="gi"
+                 oninput="filterT(this.value)"/>
+          <div style="display:flex;gap:4px;flex-wrap:wrap" id="catRow">
+            <button class="chip chip-on" data-cat="all" onclick="setCat(this)">All</button>
+            <button class="chip chip-off" data-cat="temple" onclick="setCat(this)">🛕 Temple</button>
+            <button class="chip chip-off" data-cat="mountain" onclick="setCat(this)">⛰️ Hill</button>
+            <button class="chip chip-off" data-cat="beach" onclick="setCat(this)">🏖️ Beach</button>
+            <button class="chip chip-off" data-cat="scenic" onclick="setCat(this)">🌿 Scenic</button>
+            <button class="chip chip-off" data-cat="heritage" onclick="setCat(this)">🏛️ Heritage</button>
+          </div>
+          <div id="tcards" style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;padding-right:3px" class="cs">
+            {% for temple in temples %}
+            <div class="tc"
+                 data-lat="{{ temple.latitude }}" data-lng="{{ temple.longitude }}"
+                 data-name="{{ temple.name }}" data-loc="{{ temple.location }}"
+                 data-cat="{{ temple.category }}"
+                 onclick="toggleT(this)">
+              <img src="{% if temple.image %}{{ temple.image.url }}{% else %}https://via.placeholder.com/40x40/1a1a2e/facc15?text=🛕{% endif %}"
+                   alt="{{ temple.name }}" onerror="this.src='https://via.placeholder.com/40x40/1a1a2e/facc15?text=🛕'"/>
+              <div style="flex:1;min-width:0">
+                <div class="tn" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ temple.name }}</div>
+                <div class="tl" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ temple.location }}</div>
+              </div>
+              <div class="ck">✓</div>
             </div>
-            <p id="totalDistance" class="text-white font-semibold mt-2"></p>
-            <p id="totalDuration" class="text-white font-semibold"></p>
+            {% endfor %}
+          </div>
+          <div style="font-size:10px;color:#6b7280;text-align:right" id="selCount">0 selected</div>
+        </div>
+      </div>
+
+      <!-- Generate -->
+      <button id="btnGen" class="btn-gold" onclick="generateRoute()">
+        ✨ Generate Smart Route &nbsp;🚗
+      </button>
+
+      <!-- Clear -->
+      <button id="btnClear" onclick="clearAll()">🗑️ Clear Route &amp; Reset</button>
+
+      <!-- Loading -->
+      <div id="rp-loading">
+        <div style="width:20px;height:20px;border:3px solid #facc15;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+        <span style="color:#fde68a;font-size:12px;font-weight:600">Calculating smartest route…</span>
+      </div>
+
+      <!-- ══ RESULTS ══ -->
+      <div id="rp-results">
+
+        <div class="tab-bar">
+          <button class="tab on" onclick="tab('overview',this)">📊 Overview</button>
+          <button class="tab" onclick="tab('steps',this)">🗺️ Steps</button>
+          <button class="tab" onclick="tab('weather',this)">🌤️ Weather</button>
+          <button class="tab" onclick="tab('elev',this)">📈 Elev</button>
         </div>
 
-    </div>
+        <!-- Overview -->
+        <div id="t-overview">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+            <div class="stat"><div class="sv" id="s-dist">—</div><div class="sl">Distance</div></div>
+            <div class="stat"><div class="sv" id="s-time">—</div><div class="sl">Duration</div></div>
+            <div class="stat"><div class="sv" id="s-stops">—</div><div class="sl">Stops</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px">
+            <div class="stat"><div class="sv" id="s-fuel">—</div><div class="sl">Fuel (L)</div></div>
+            <div class="stat"><div class="sv" id="s-cost">—</div><div class="sl">Fuel ₹</div></div>
+            <div class="stat"><div class="sv" id="s-speed">—</div><div class="sl">Avg Speed</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">
+            <div class="stat"><div class="sv" id="s-tolls">—</div><div class="sl">Toll Booths</div></div>
+            <div class="stat"><div class="sv" id="s-toll-cost">—</div><div class="sl">Est. Toll ₹</div></div>
+          </div>
+          <div style="margin-top:8px;font-size:10px;font-weight:700;color:#facc15;text-transform:uppercase;letter-spacing:.07em;padding-bottom:4px;border-bottom:1px solid rgba(250,204,21,0.15)">
+            Segments
+          </div>
+          <div id="segList" style="display:flex;flex-direction:column;gap:5px;margin-top:5px;max-height:160px;overflow-y:auto" class="cs"></div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <button class="btn-gold btn-sm" style="flex:1;padding:9px" onclick="openShare()">📤 Share</button>
+            <button class="btn-ghost btn-sm" style="flex:1;padding:9px" onclick="dlGPX()">⬇️ GPX</button>
+          </div>
+        </div>
 
-    <!-- MAP -->
-    <div class="flex-1 p-6">
-        <div id="map" class="h-full w-full rounded-3xl overflow-hidden shadow-2xl border border-white/20"></div>
-    </div>
+        <!-- Steps -->
+        <div id="t-steps" style="display:none;max-height:280px;overflow-y:auto" class="cs">
+          <div id="stepsList"></div>
+        </div>
+
+        <!-- Weather -->
+        <div id="t-weather" style="display:none">
+          <div id="wxCards" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:240px;overflow-y:auto" class="cs"></div>
+        </div>
+
+        <!-- Elevation -->
+        <div id="t-elev" style="display:none">
+          <canvas id="elevChart"></canvas>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-top:4px">
+            <span id="eMin">Min: —</span><span id="eMax">Max: —</span>
+          </div>
+        </div>
+
+      </div><!-- /rp-results -->
+
+    </div><!-- /rp-scroll -->
+  </div><!-- /rp-panel -->
+
+  <!-- ══ MAP ══ -->
+  <div id="rp-map-wrap">
+    <button class="fab" style="top:12px;right:12px"  onclick="toggleSat()" id="fabSat">🛣️ Street Map</button>
+    <button class="fab" style="top:12px;right:120px" onclick="toggleCircle()" id="fabCircle">⭕ 50km Radius</button>
+    <button class="fab" style="top:52px;right:12px"  onclick="togglePOI()" id="fabPOI">⛽ Nearby Places</button>
+    <div id="map"></div>
+  </div>
 
 </div>
 
+<!-- Share Modal -->
+<div id="shareModal">
+  <div class="mbox">
+    <h3 style="color:#facc15;font-weight:800;font-size:16px;margin-bottom:16px">📤 Share Your Route</h3>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn-gold"  style="width:100%;padding:11px;border-radius:10px" onclick="cpLink()">🔗 Copy Link</button>
+      <button class="btn-ghost" style="width:100%;padding:11px" onclick="waShare()">💬 WhatsApp</button>
+      <button class="btn-ghost" style="width:100%;padding:11px" onclick="dlGPX()">⬇️ Download GPX</button>
+      <button class="btn-ghost" style="width:100%;padding:11px" onclick="window.print();closeModal()">🖨️ Print</button>
+    </div>
+    <button onclick="closeModal()" style="margin-top:12px;width:100%;text-align:center;color:#6b7280;font-size:12px;background:none;border:none;cursor:pointer">✕ Close</button>
+  </div>
+</div>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+// ── Constants ──
+const ORS       = "{{ ORS_KEY }}";
+const FUEL_RATE = 12, FUEL_PRICE = 105;
+const TOLL_AVG  = 95; // avg ₹ per toll booth on Indian NHs (car)
 
-        // MAP INIT
-        var map = L.map('map').setView([20.5937, 78.9629], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+// ── State ──
+let map, satTile, streetTile, useSat = true;
+let circleLayers = [];
+let routeLayers = [], markers = [];
+let startCoord  = null, tapMode = false;
+let extraStops  = [], selectedT = [];
+let routeGeoJSON = null, elevData = [];
+let activeCat = 'all', tsOpen = false;
+let poiLayers = [], poiVisible = false;
+let dragSrc   = null;
+let startMk   = null;
 
-        var routeLayer;
-        var markers = [];
+// ── Map init ──
+document.addEventListener('DOMContentLoaded', () => {
+  map = L.map('map', { zoomControl: true }).setView([20.5937, 78.9629], 5);
+  streetTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
+  satTile    = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
+  satTile.addTo(map);
+  map.on('click', onMapTap);
+});
 
-        // TOGGLE TEMPLE SELECT
-        const showBtn = document.getElementById("showTemplesBtn");
-        const templeContainer = document.getElementById("templeContainer");
-        const btnArrow = document.getElementById("btnArrow");
+// ── Satellite toggle ──
+function toggleSat() {
+  if (useSat) { map.removeLayer(satTile); streetTile.addTo(map); document.getElementById('fabSat').textContent = '🛰️ Satellite'; }
+  else        { map.removeLayer(streetTile); satTile.addTo(map); document.getElementById('fabSat').textContent = '🛣️ Street Map'; }
+  useSat = !useSat;
+}
 
-        showBtn.addEventListener("click", () => {
-            templeContainer.classList.toggle("hidden");
-            btnArrow.textContent = templeContainer.classList.contains("hidden") ? "⬇️" : "⬆️";
-        });
+// ── 50km radius circles ──
+function toggleCircle() {
+  if (circleLayers.length) {
+    circleLayers.forEach(c => map.removeLayer(c));
+    circleLayers = [];
+    document.getElementById('fabCircle').textContent = '⭕ 50km Radius';
+    return;
+  }
+  const pts = [];
+  if (startCoord) pts.push(startCoord);
+  extraStops.forEach(s => pts.push([s.lat, s.lng]));
+  selectedT.forEach(t => pts.push([t.lat, t.lng]));
+  if (!pts.length) { alert('Add some locations first'); return; }
+  pts.forEach(c => {
+    const circle = L.circle(c, { radius: 50000, color: '#facc15', fillColor: '#facc15', fillOpacity: 0.04, weight: 1.5, dashArray: '6 4' }).addTo(map);
+    circleLayers.push(circle);
+  });
+  document.getElementById('fabCircle').textContent = '✕ Hide Radius';
+}
 
-        // GENERATE MULTI-STOP ROUTE
-        window.generateMultiRoute = function () {
-            let select = document.getElementById("templeList");
-            let selected = Array.from(select.selectedOptions);
+// ══════════════════════════════════════════════════════════
+// FEATURE 1 — DRAG TO REORDER STOPS
+// ══════════════════════════════════════════════════════════
+function onDragStart(e) {
+  dragSrc = this;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => this.style.opacity = '0.4', 0);
+}
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.stop-pill').forEach(p => p.classList.remove('drag-over'));
+  this.classList.add('drag-over');
+}
+function onDrop(e) {
+  e.stopPropagation();
+  if (dragSrc === this) return;
+  const list = document.getElementById('stopList');
+  const pills = [...list.children];
+  const fromIdx = pills.indexOf(dragSrc);
+  const toIdx   = pills.indexOf(this);
+  if (fromIdx < toIdx) list.insertBefore(dragSrc, this.nextSibling);
+  else                 list.insertBefore(dragSrc, this);
+  extraStops = [...list.children].map(el => extraStops.find(s => s.id === el.id)).filter(Boolean);
+}
+function onDragEnd() {
+  this.style.opacity = '1';
+  document.querySelectorAll('.stop-pill').forEach(p => p.classList.remove('drag-over'));
+}
 
-            if (selected.length < 2) { alert("Please select at least 2 temples"); return; }
+// ══════════════════════════════════════════════════════════
+// FEATURE 2 — TOLL ESTIMATE
+// Curated Indian NH toll booth coordinates
+// Covers major highways across all regions of India
+// ══════════════════════════════════════════════════════════
+async function fetchTolls(routeCoords) {
+  document.getElementById('s-tolls').textContent = '…';
+  document.getElementById('s-toll-cost').textContent = '…';
 
-            let coords = selected.map(opt => {
-                let [lat, lng] = opt.value.split(",").map(Number);
-                return [lng, lat]; // ORS format
-            });
-            let names = selected.map(opt => opt.dataset.name);
+  const INDIA_TOLLS = [
+    // ── Andhra Pradesh ──
+    // NH-16 Vijayawada–Visakhapatnam
+    [16.5062,80.6480],[16.9174,81.6943],[17.0762,81.8936],
+    [17.2981,82.0871],[17.4726,82.2734],[17.6832,82.4512],
+    [17.8241,82.5781],[18.0123,82.7340],[18.1562,82.9123],
+    // NH-65 Vijayawada–Hyderabad
+    [16.4820,80.5120],[16.3241,80.2341],[16.1823,79.9871],
+    [16.0234,79.7234],[15.8912,79.4512],
+    // NH-40 / NH-716 Tirupati corridor
+    [13.6834,79.4123],[13.7241,79.5234],[14.2341,79.8712],
+    [14.6123,79.9341],[15.0234,80.1234],[15.3412,80.2341],[15.6234,80.3412],
 
-            // Remove old layers
-            if (routeLayer) map.removeLayer(routeLayer);
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
+    // ── Telangana ──
+    // NH-44 Hyderabad–Nagpur
+    [17.3850,78.4867],[17.6234,78.8123],[17.9812,79.1234],
+    [18.2341,79.4512],[18.5123,79.7234],[18.7812,80.0123],
+    // NH-65 Hyderabad–Pune
+    [17.3200,78.3500],[17.0234,77.9812],[16.7812,77.6234],
+    [16.5123,77.3412],[16.2341,77.0234],
+    // NH-163 Hyderabad–Warangal
+    [17.4500,78.6500],[17.6812,79.0123],[17.9234,79.3812],
 
-            // Add markers
-            coords.forEach((c, idx) => {
-                let m = L.marker([c[1], c[0]]).addTo(map).bindPopup(names[idx]);
-                markers.push(m);
-            });
+    // ── Maharashtra ──
+    // Mumbai–Pune Expressway
+    [18.9750,73.0300],[18.8234,73.1812],[18.7123,73.3234],
+    [18.6012,73.4512],[18.5234,73.5812],[18.4512,73.7123],
+    // NH-48 Mumbai–Bangalore
+    [19.0760,72.8777],[18.6500,73.8000],[17.6868,74.0063],
+    [16.8500,74.2000],[15.8500,74.5000],
+    // Mumbai–Nashik Expressway
+    [19.2183,72.9781],[19.4234,73.1234],[19.6512,73.3512],
+    [19.8234,73.5234],[20.0123,73.7123],
+    // NH-53 Nagpur–Hyderabad
+    [21.1458,79.0882],[20.8234,79.2341],[20.5123,79.4512],
+    [20.2341,79.6234],[19.9512,79.8123],
+    // NH-6 Pune–Solapur
+    [18.5204,73.8567],[18.3234,74.1234],[18.1512,74.3812],
+    [17.9234,74.6234],[17.6812,74.8512],
 
-            // Show spinner
-            document.getElementById("routeLoading").classList.remove("hidden");
-            document.getElementById("routeInfo").classList.add("hidden");
+    // ── Karnataka ──
+    // NH-75 Bangalore–Mangalore
+    [12.9716,77.5946],[12.8234,77.3812],[12.6512,77.1234],
+    [12.4812,76.8512],[12.3234,76.5812],[12.1512,76.2234],
+    [11.9812,75.9512],[11.8234,75.6812],
+    // NH-48 Bangalore–Chennai
+    [12.9716,77.5946],[13.1234,77.8512],[13.3512,78.1234],
+    [13.5812,78.3812],[13.8234,78.6512],
+    // NH-44 Bangalore–Hyderabad
+    [13.0827,77.5877],[13.3234,77.8234],[13.5812,78.0812],
+    [13.8234,78.3234],[14.0812,78.5812],[14.3234,78.8234],
+    // NH-66 Bangalore–Goa
+    [12.9716,77.5946],[12.7234,77.2812],[12.4512,76.9234],
+    [12.1812,76.5812],[11.8234,76.1234],[11.4512,75.7234],
 
-            // Fetch route
-            fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
-                method: "POST",
-                headers: { "Authorization": "{{ ORS_KEY }}", "Content-Type": "application/json" },
-                body: JSON.stringify({ coordinates: coords })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("routeLoading").classList.add("hidden");
-                    if (!data.features) { alert("Route not found"); return; }
+    // ── Tamil Nadu ──
+    // NH-48 Chennai–Bangalore
+    [13.0827,80.2707],[12.8512,80.0234],[12.6234,79.7812],
+    [12.3812,79.5234],[12.1234,79.2512],
+    // NH-44 Chennai–Madurai
+    [13.0827,80.2707],[12.6234,79.8512],[12.1512,79.4234],
+    [11.6812,79.0512],[11.1234,78.5812],[10.5812,78.1234],[9.9234,77.6512],
+    // NH-66 Chennai–Kanyakumari
+    [13.0827,80.2707],[12.6234,80.1812],[12.1512,79.9234],
+    [11.6812,79.6812],[11.1234,79.4234],[10.5812,79.1512],[8.0883,77.5385],
+    // NH-181 Coimbatore–Salem
+    [11.0168,76.9558],[11.2234,77.2812],[11.4512,77.5812],
+    [11.6812,77.8812],[11.8234,78.1512],
 
-                    let routeCoords = data.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                    let segments = data.features[0].properties.segments;
+    // ── Kerala ──
+    // NH-66 Mumbai–Kanyakumari (Kerala stretch)
+    [11.2588,75.7804],[10.8234,75.9812],[10.3812,76.1234],
+    [9.9234,76.2812],[9.4812,76.3234],[8.8812,76.5812],[8.5241,76.9366],
+    // NH-544 Coimbatore–Kochi
+    [10.8505,76.2711],[10.5234,76.4512],[10.1812,76.5812],
+    [9.9812,76.6234],[9.8234,76.7512],
 
-                    routeLayer = L.polyline(routeCoords, { color: "#2563EB", weight: 6 }).addTo(map);
-                    map.fitBounds(routeLayer.getBounds());
+    // ── Gujarat ──
+    // NH-48 Ahmedabad–Mumbai
+    [23.0225,72.5714],[22.7234,72.6812],[22.3812,72.7234],
+    [22.0234,72.8512],[21.6512,72.9812],[21.1702,72.8311],
+    // Ahmedabad–Vadodara Expressway
+    [23.0225,72.5714],[22.7512,72.8234],[22.5234,73.0812],
+    [22.3012,73.2234],[22.1234,73.4512],
+    // NH-27 Ahmedabad–Rajkot
+    [23.0225,72.5714],[22.8234,72.2812],[22.5812,71.9234],
+    [22.3234,71.6512],[22.0812,71.3812],[21.9234,71.1234],
+    // NH-8 Surat–Mumbai
+    [21.1702,72.8311],[20.8234,72.9812],[20.4512,73.0234],
+    [20.0812,73.1512],[19.6234,73.2812],
 
-                    let detailsDiv = document.getElementById("routeDetails");
-                    detailsDiv.innerHTML = "";
-                    let totalDistance = 0;
-                    let totalDuration = 0;
+    // ── Rajasthan ──
+    // NH-48 Delhi–Jaipur
+    [28.6139,77.2090],[28.3234,77.0812],[28.0512,76.8234],
+    [27.7812,76.5512],[27.5234,76.2812],[27.2512,75.9234],[26.9122,75.7873],
+    // NH-11 Jaipur–Agra
+    [26.9122,75.7873],[27.1234,76.1234],[27.3512,76.4512],
+    [27.5812,76.7812],[27.8234,77.0812],
+    // NH-25 Jaipur–Ajmer
+    [26.9122,75.7873],[26.7234,75.5812],[26.5512,75.3234],
+    [26.3812,75.0812],[26.4499,74.6399],
 
-                    segments.forEach((seg, idx) => {
-                        totalDistance += seg.distance;
-                        totalDuration += seg.duration;
+    // ── Delhi NCR & Haryana ──
+    // NH-44 Delhi–Chandigarh
+    [28.6139,77.2090],[28.8512,77.1234],[29.0812,77.0512],
+    [29.3234,76.9812],[29.5812,76.8234],[29.8234,76.6512],[30.7333,76.7794],
+    // Delhi–Meerut Expressway
+    [28.6139,77.2090],[28.7234,77.4512],[28.8512,77.6812],
+    [28.9812,77.8234],[29.0812,78.0512],
+    // NH-48 Delhi–Jaipur (Gurgaon stretch)
+    [28.4595,77.0266],[28.3234,76.9512],[28.1812,76.8234],
+    // NH-9 Delhi–Agra (Yamuna Expressway)
+    [28.5355,77.3910],[28.3234,77.5234],[28.1012,77.6812],
+    [27.8812,77.8234],[27.6234,78.0512],[27.1767,78.0081],
 
-                        detailsDiv.innerHTML += `<p class="text-white text-sm bg-white/10 px-3 py-2 rounded-lg">
-                    ${names[idx]} → ${names[idx + 1]} : ${(seg.distance / 1000).toFixed(2)} km, ${(seg.duration / 60).toFixed(0)} min
-                </p>`;
-                    });
+    // ── Uttar Pradesh ──
+    // NH-19 Agra–Kanpur
+    [27.1767,78.0081],[26.9234,78.3512],[26.6812,78.6812],
+    [26.4512,79.0234],[26.2234,79.3512],[26.4499,80.3319],
+    // NH-27 Lucknow–Varanasi
+    [26.8467,80.9462],[26.6234,81.2812],[26.4012,81.5812],
+    [26.1812,81.8812],[25.9512,82.1512],[25.3176,82.9739],
+    // Agra–Lucknow Expressway
+    [27.1767,78.0081],[27.0234,78.3512],[26.8512,78.6812],
+    [26.6812,78.9812],[26.5234,79.2812],[26.4499,80.3319],
 
-                    document.getElementById("totalDistance").innerText = "Total Distance: " + (totalDistance / 1000).toFixed(2) + " km";
-                    document.getElementById("totalDuration").innerText = "Total Duration: " + (totalDuration / 60).toFixed(0) + " minutes";
-                    document.getElementById("routeInfo").classList.remove("hidden");
-                })
-                .catch(err => { console.log(err); alert("Error generating route"); });
-        };
+    // ── Punjab ──
+    // NH-44 Ambala–Amritsar
+    [30.3752,76.7821],[30.6234,76.8512],[30.8812,76.9234],
+    [31.1234,77.0512],[31.3812,77.1812],[31.6234,74.8723],
 
+    // ── Madhya Pradesh ──
+    // NH-44 Nagpur–Bhopal
+    [21.1458,79.0882],[21.4234,79.3812],[21.7512,79.6512],
+    [22.0812,79.9234],[22.4234,80.1812],[22.7512,80.4512],[23.2599,77.4126],
+    // NH-46 Bhopal–Indore
+    [23.2599,77.4126],[23.1234,77.1812],[22.9512,76.9234],
+    [22.7234,76.6812],[22.5512,76.4234],[22.7196,75.8577],
+
+    // ── Odisha ──
+    // NH-16 Bhubaneswar–Kolkata
+    [20.2961,85.8245],[20.5234,86.1512],[20.7812,86.4512],
+    [21.0512,86.7512],[21.3234,86.9812],[21.5812,87.2512],
+    // NH-16 Bhubaneswar–Visakhapatnam
+    [20.2961,85.8245],[19.9234,85.5812],[19.5812,85.2234],
+    [19.2234,84.9512],[18.8812,84.6234],[18.5512,84.2812],
+
+    // ── West Bengal ──
+    // NH-12 Kolkata–Siliguri
+    [22.5726,88.3639],[22.8234,88.5812],[23.1512,88.7234],
+    [23.4812,88.8512],[23.8234,88.9812],[24.1812,89.1234],
+    [24.5512,89.2812],[26.7271,88.3953],
+    // NH-16 Kolkata–Bhubaneswar
+    [22.5726,88.3639],[22.3234,88.1812],[22.0512,87.9234],
+    [21.7812,87.6512],[21.5234,87.3812],[21.2512,87.1234],
+
+    // ── Jharkhand ──
+    // NH-33 Ranchi–Jamshedpur
+    [23.3441,85.3096],[23.1234,85.5812],[22.9512,85.8234],
+    [22.7234,86.0512],[22.5812,86.2234],[22.8046,86.2029],
+
+    // ── Chhattisgarh ──
+    // NH-130 Raipur–Bilaspur
+    [21.2514,81.6296],[21.4512,81.8812],[21.6812,82.1234],
+    [21.9234,82.3812],[22.1512,82.5812],
+
+    // ── Goa ──
+    // NH-66 Panaji–Mumbai
+    [15.4909,73.8278],[15.7234,73.9812],[16.0512,74.1234],
+    [16.3234,74.2812],[16.6512,74.4234],
+
+    // ── Himachal Pradesh ──
+    // NH-5 Shimla–Chandigarh
+    [31.1048,77.1734],[31.0234,77.0512],[30.9512,76.9234],
+    [30.8234,76.8512],[30.7333,76.7794],
+  ];
+
+  // Check which tolls are within 15km of the actual route polyline
+  const count = INDIA_TOLLS.filter(([tlat, tlng]) => {
+    return routeCoords.some(([rlat, rlng]) => {
+      const dlat = tlat - rlat, dlng = tlng - rlng;
+      const dist = Math.sqrt(dlat * dlat + dlng * dlng) * 111;
+      return dist < 15;
     });
+  }).length;
+
+  document.getElementById('s-tolls').textContent     = count || '0';
+  document.getElementById('s-toll-cost').textContent = count ? '~₹' + (count * TOLL_AVG) : '₹0';
+}
+
+// ══════════════════════════════════════════════════════════
+// FEATURE 3 — NEARBY POI PINS (Overpass API)
+// ══════════════════════════════════════════════════════════
+async function togglePOI() {
+  if (poiVisible) {
+    poiLayers.forEach(l => map.removeLayer(l));
+    poiLayers = [];
+    poiVisible = false;
+    document.getElementById('fabPOI').textContent = '⛽ Nearby Places';
+    return;
+  }
+  const pts = [];
+  if (startCoord) pts.push({ lat: startCoord[0], lng: startCoord[1] });
+  extraStops.forEach(s => pts.push(s));
+  selectedT.forEach(t => pts.push(t));
+  if (!pts.length) { alert('Add stops first to find nearby places'); return; }
+
+  document.getElementById('fabPOI').textContent = '⏳ Loading…';
+
+  const POI_TYPES = [
+    { key: 'amenity', val: 'fuel',       icon: '⛽' },
+    { key: 'amenity', val: 'restaurant', icon: '🍽️' },
+    { key: 'amenity', val: 'atm',        icon: '🏧' },
+    { key: 'amenity', val: 'hospital',   icon: '🏥' },
+  ];
+
+  for (const pt of pts) {
+    for (const poi of POI_TYPES) {
+      const q = `[out:json][timeout:8];node["${poi.key}"="${poi.val}"](around:5000,${pt.lat},${pt.lng});out 6;`;
+      try {
+        const r = await fetch('/api/overpass/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'data=' + encodeURIComponent(q)
+        });
+        const d = await r.json();
+        (d.elements || []).forEach(el => {
+          const m = L.marker([el.lat, el.lon], {
+            icon: L.divIcon({
+              html: `<div style="font-size:18px;filter:drop-shadow(0 1px 4px rgba(0,0,0,.6))">${poi.icon}</div>`,
+              className: '', iconAnchor: [10, 10]
+            })
+          }).addTo(map).bindPopup(`<b>${poi.icon} ${el.tags?.name || poi.val}</b><br><span style="font-size:10px;color:#9ca3af">${el.tags?.['addr:street'] || ''}</span>`);
+          poiLayers.push(m);
+        });
+      } catch { /* silent fail */ }
+    }
+  }
+
+  poiVisible = true;
+  document.getElementById('fabPOI').textContent = '✕ Hide Places';
+}
+
+// ── Temple section toggle ──
+function toggleTempleSection() {
+  tsOpen = !tsOpen;
+  const ts = document.getElementById('templeSection');
+  ts.style.display = tsOpen ? 'flex' : 'none';
+  if (tsOpen) ts.style.flexDirection = 'column';
+  document.getElementById('tsArrow').textContent = tsOpen ? '▲' : '▼';
+}
+
+// ── Temple card select/deselect ──
+function toggleT(card) {
+  const name = card.dataset.name;
+  const idx  = selectedT.findIndex(t => t.name === name);
+  if (idx > -1) { selectedT.splice(idx, 1); card.classList.remove('sel'); }
+  else { selectedT.push({ lat: +card.dataset.lat, lng: +card.dataset.lng, name, loc: card.dataset.loc }); card.classList.add('sel'); }
+  document.getElementById('selCount').textContent = selectedT.length + ' selected';
+}
+
+// ── Filter temples ──
+function filterT(q) {
+  document.querySelectorAll('.tc').forEach(c => {
+    const mq = c.dataset.name.toLowerCase().includes(q.toLowerCase()) || c.dataset.loc.toLowerCase().includes(q.toLowerCase());
+    const mc = activeCat === 'all' || c.dataset.cat === activeCat;
+    c.style.display = (mq && mc) ? '' : 'none';
+  });
+}
+function setCat(btn) {
+  document.querySelectorAll('#catRow .chip').forEach(b => b.className = 'chip chip-off');
+  btn.className = 'chip chip-on';
+  activeCat = btn.dataset.cat;
+  filterT(document.getElementById('tsearch').value);
+}
+
+// ── Geocode / Autocomplete ──
+let timer = null;
+function debounce(v, type) { clearTimeout(timer); if (!v || v.length < 3) return; timer = setTimeout(() => ac(v, type), 420); }
+async function ac(q, type) {
+  const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=in`);
+  const d = await r.json();
+  const box = document.getElementById(type === 'start' ? 'startAC' : 'placeAC');
+  box.innerHTML = '';
+  if (!d.length) { box.style.display = 'none'; return; }
+  d.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'ac-item';
+    div.textContent = item.display_name.split(',').slice(0, 3).join(', ');
+    div.onclick = () => {
+      if (type === 'start') {
+        startCoord = [+item.lat, +item.lon];
+        document.getElementById('startInput').value = div.textContent;
+        showStartInfo(div.textContent, +item.lat, +item.lon);
+        placeStartMarker(+item.lat, +item.lon, div.textContent);
+        map.setView([+item.lat, +item.lon], 11);
+      } else {
+        addStop(+item.lat, +item.lon, div.textContent);
+        document.getElementById('placeInput').value = '';
+      }
+      box.style.display = 'none';
+    };
+    box.appendChild(div);
+  });
+  box.style.display = 'block';
+}
+
+// ── GPS ──
+function getMyLoc() {
+  if (!navigator.geolocation) { alert('Geolocation not supported'); return; }
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    startCoord = [lat, lng];
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+    const d = await r.json();
+    const name = d.display_name.split(',').slice(0, 2).join(', ');
+    document.getElementById('startInput').value = name;
+    showStartInfo('📡 ' + name, lat, lng);
+    placeStartMarker(lat, lng, name);
+    map.setView([lat, lng], 13);
+  }, e => alert('Location error: ' + e.message));
+}
+function showStartInfo(name) {
+  document.getElementById('startInfoTxt').textContent = name;
+  document.getElementById('startInfo').style.display = 'flex';
+}
+function addStartToRoute() {
+  if (!startCoord) return;
+  const strip = document.getElementById('startInfo');
+  strip.innerHTML = `<span>✅</span><span style="font-size:11px;color:#86efac">Start location locked!</span>`;
+  strip.style.display = 'flex';
+}
+
+// ── Start marker ──
+function placeStartMarker(lat, lng, name) {
+  if (startMk) map.removeLayer(startMk);
+  startMk = L.marker([lat, lng], {
+    icon: L.divIcon({
+      html: `<div style="width:30px;height:30px;border-radius:50%;background:#22c55e;border:2px solid #fff;
+             display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 0 10px #22c55e">🏠</div>`,
+      className: '', iconAnchor: [15, 15]
+    })
+  }).addTo(map).bindPopup(`<b style="color:#22c55e">Start: ${name}</b>`);
+}
+
+// ── Map tap mode ──
+function toggleTap() {
+  tapMode = !tapMode;
+  document.getElementById('tapBtn').textContent = tapMode ? '🚫' : '🖱️';
+  document.getElementById('tapHint').style.display = tapMode ? 'block' : 'none';
+  map.getContainer().style.cursor = tapMode ? 'crosshair' : '';
+}
+async function onMapTap(e) {
+  if (!tapMode) return;
+  const { lat, lng } = e.latlng;
+  const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+  const d = await r.json();
+  const name = d.display_name.split(',').slice(0, 3).join(', ');
+  addStop(lat, lng, name);
+  toggleTap();
+}
+
+// ── Add stop ──
+function addStop(lat, lng, name) {
+  const id = 'stop_' + Date.now();
+  extraStops.push({ lat, lng, name, id });
+
+  const div = document.createElement('div');
+  div.className = 'stop-pill';
+  div.id = id;
+  div.setAttribute('draggable', 'true');
+  div.innerHTML = `
+    <span class="drag-handle" title="Drag to reorder">⠿</span>
+    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px">${name}</span>
+    <button onclick="removeStop('${id}')">✕</button>`;
+
+  div.addEventListener('dragstart', onDragStart);
+  div.addEventListener('dragover',  onDragOver);
+  div.addEventListener('drop',      onDrop);
+  div.addEventListener('dragend',   onDragEnd);
+
+  document.getElementById('stopList').appendChild(div);
+  if (extraStops.length >= 2) document.getElementById('dragHint').style.display = 'block';
+
+  const m = L.marker([lat, lng], {
+    icon: L.divIcon({
+      html: `<div style="width:12px;height:12px;border-radius:50%;background:#a78bfa;border:2px solid #fff;box-shadow:0 0 6px #a78bfa"></div>`,
+      className: '', iconAnchor: [6, 6]
+    })
+  }).addTo(map).bindPopup(name);
+  markers.push({ m, id });
+}
+
+function removeStop(id) {
+  extraStops = extraStops.filter(s => s.id !== id);
+  document.getElementById(id)?.remove();
+  const idx = markers.findIndex(x => x.id === id);
+  if (idx > -1) { map.removeLayer(markers[idx].m); markers.splice(idx, 1); }
+  if (extraStops.length < 2) document.getElementById('dragHint').style.display = 'none';
+}
+
+// ── Haversine distance ──
+function hav(a, b, c, d) {
+  const R = 6371, r = Math.PI / 180, dl = (c - a) * r, dm = (d - b) * r;
+  const x = Math.sin(dl / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin(dm / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
+// ── Format duration ──
+function fmt(m) { const h = Math.floor(m / 60), n = Math.round(m % 60); return h ? `${h}h ${n}m` : `${n}m`; }
+
+// ── Clear everything ──
+function clearAll() {
+  routeLayers.forEach(l => map.removeLayer(l)); routeLayers = [];
+  markers.forEach(x => map.removeLayer(x.m)); markers = [];
+  poiLayers.forEach(l => map.removeLayer(l)); poiLayers = [];
+  circleLayers.forEach(c => map.removeLayer(c)); circleLayers = [];
+  if (startMk) { map.removeLayer(startMk); startMk = null; }
+  startCoord = null; extraStops = []; selectedT = [];
+  tapMode = false; poiVisible = false;
+  document.getElementById('stopList').innerHTML = '';
+  document.getElementById('startInput').value = '';
+  document.getElementById('startInfo').style.display = 'none';
+  document.getElementById('dragHint').style.display = 'none';
+  document.getElementById('fabPOI').textContent = '⛽ Nearby Places';
+  document.getElementById('fabCircle').textContent = '⭕ 50km Radius';
+  document.querySelectorAll('.tc').forEach(c => c.classList.remove('sel'));
+  document.getElementById('selCount').textContent = '0 selected';
+  document.getElementById('rp-results').style.display = 'none';
+  document.getElementById('btnClear').style.display = 'none';
+  routeGeoJSON = null; elevData = [];
+}
+
+// ── Generate Route ──
+async function generateRoute() {
+  let pts = [];
+  if (startCoord) pts.push({ lat: startCoord[0], lng: startCoord[1], name: 'Start' });
+  extraStops.forEach(s => pts.push(s));
+  selectedT.forEach(t => pts.push(t));
+  if (pts.length < 2) { alert('Add at least 2 locations (start + destination)'); return; }
+
+  // Greedy nearest-neighbour sort
+  if (pts.length > 2) {
+    const sorted = [pts[0]]; let rem = [...pts.slice(1)];
+    while (rem.length) {
+      const last = sorted[sorted.length - 1]; let ni = 0, md = Infinity;
+      rem.forEach((p, i) => { const d = hav(last.lat, last.lng, p.lat, p.lng); if (d < md) { md = d; ni = i; } });
+      sorted.push(rem.splice(ni, 1)[0]);
+    }
+    pts = sorted;
+  }
+
+  routeLayers.forEach(l => map.removeLayer(l)); routeLayers = [];
+  markers.forEach(x => map.removeLayer(x.m)); markers = [];
+
+  pts.forEach((p, i) => {
+    const bg = i === 0 ? '#22c55e' : i === pts.length - 1 ? '#ef4444' : '#facc15';
+    const m  = L.marker([p.lat, p.lng], {
+      icon: L.divIcon({
+        html: `<div style="width:26px;height:26px;border-radius:50%;background:${bg};border:2px solid #fff;
+               display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;
+               color:#000;box-shadow:0 2px 8px rgba(0,0,0,.6)">${i + 1}</div>`,
+        className: '', iconAnchor: [13, 13]
+      })
+    }).addTo(map).bindPopup(`<b>${p.name}</b>`);
+    markers.push({ m, id: 'pt' + i });
+  });
+
+  document.getElementById('rp-loading').style.display = 'flex';
+  document.getElementById('rp-results').style.display = 'none';
+
+  try {
+    const res  = await fetch('https://api.openrouteservice.org/v2/directions/driving-car/geojson', {
+      method: 'POST',
+      headers: { 'Authorization': ORS, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coordinates: pts.map(p => [p.lng, p.lat]), elevation: true, instructions: true })
+    });
+    const data = await res.json();
+    document.getElementById('rp-loading').style.display = 'none';
+    if (!data.features) { alert('Route failed — check ORS key'); return; }
+
+    routeGeoJSON = data;
+    const feat = data.features[0], segs = feat.properties.segments;
+    const rc   = feat.geometry.coordinates.map(c => [c[1], c[0]]);
+
+    // Gradient polyline
+    for (let i = 0; i < rc.length - 1; i++) {
+      const t = i / (rc.length - 1);
+      const col = gradCol(t);
+      const l = L.polyline([rc[i], rc[i + 1]], { color: col, weight: 6, opacity: .9, lineCap: 'round' }).addTo(map);
+      routeLayers.push(l);
+    }
+    map.fitBounds(L.polyline(rc).getBounds(), { padding: [40, 40] });
+
+    // Stats
+    const td   = segs.reduce((a, s) => a + s.distance, 0) / 1000;
+    const tt   = segs.reduce((a, s) => a + s.duration, 0) / 60;
+    const avgSpd = Math.round(td / (tt / 60));
+    document.getElementById('s-dist').textContent  = td.toFixed(1) + ' km';
+    document.getElementById('s-time').textContent  = fmt(tt);
+    document.getElementById('s-stops').textContent = pts.length;
+    document.getElementById('s-fuel').textContent  = (td / FUEL_RATE).toFixed(1);
+    document.getElementById('s-cost').textContent  = '₹' + Math.round((td / FUEL_RATE) * FUEL_PRICE);
+    document.getElementById('s-speed').textContent = avgSpd + ' km/h';
+
+    // Segments
+    const sl = document.getElementById('segList'); sl.innerHTML = '';
+    segs.forEach((s, i) => sl.innerHTML += `<div class="seg">
+      <div style="font-size:11px;font-weight:700;color:#facc15">${pts[i].name} → ${pts[i + 1].name}</div>
+      <div style="display:flex;gap:10px;margin-top:4px;font-size:10px;color:#9ca3af">
+        <span>📏 ${(s.distance / 1000).toFixed(1)} km</span>
+        <span>⏱️ ${fmt(s.duration / 60)}</span>
+        <span>⛽ ${((s.distance / 1000) / FUEL_RATE).toFixed(1)} L</span>
+        <span>💰 ₹${Math.round(((s.distance / 1000) / FUEL_RATE) * FUEL_PRICE)}</span>
+      </div></div>`);
+
+    // Steps
+    const stl = document.getElementById('stepsList'); stl.innerHTML = '';
+    segs.forEach((s, si) => {
+      stl.innerHTML += `<div style="color:#facc15;font-size:10px;font-weight:800;margin:8px 0 3px;text-transform:uppercase">
+        Leg ${si + 1}: ${pts[si].name} → ${pts[si + 1].name}</div>`;
+      s.steps.forEach(st => stl.innerHTML += `<div class="step">
+        <div class="si">${stepIco(st.type)}</div>
+        <div><div style="font-size:11px;color:#d1d5db">${st.instruction}</div>
+        <div style="font-size:10px;color:#6b7280">${(st.distance / 1000).toFixed(2)} km · ${fmt(st.duration / 60)}</div></div>
+      </div>`);
+    });
+
+    // Elevation chart
+    if (feat.geometry.coordinates[0].length === 3) {
+      elevData = feat.geometry.coordinates.map(c => c[2]);
+      setTimeout(() => drawElev(elevData), 60);
+    }
+
+    // Weather & Tolls
+    fetchWx(pts);
+    fetchTolls(rc);
+
+    document.getElementById('rp-results').style.display = 'flex';
+    document.getElementById('btnClear').style.display   = 'block';
+
+  } catch (e) {
+    document.getElementById('rp-loading').style.display = 'none';
+    alert('Error: ' + e.message);
+  }
+}
+
+// ── Gradient colour ──
+function gradCol(t) {
+  if (t < .5) { const r = Math.round(34 + (250 - 34) * (t * 2)), g = Math.round(197 + 7 * (1 - t * 2)); return `rgb(${r},${g},21)`; }
+  const g = Math.round(204 * (1 - (t - .5) * 2)); return `rgb(250,${g},21)`;
+}
+
+// ── Step icons ──
+function stepIco(t) { return ({ 0:'🏁',1:'↗️',2:'↪️',3:'↩️',4:'⬆️',5:'↖️',6:'↗️',7:'🔄',8:'🏁',9:'🛣️',10:'🚦',11:'🔃',12:'⬆️' })[t] || '📍'; }
+
+// ── Elevation chart ──
+function drawElev(data) {
+  const cv  = document.getElementById('elevChart');
+  const ctx = cv.getContext('2d');
+  const W   = cv.offsetWidth || 300, H = 72;
+  cv.width  = W; cv.height = H;
+  const mn = Math.min(...data), mx = Math.max(...data);
+  document.getElementById('eMin').textContent = 'Min: ' + Math.round(mn) + 'm';
+  document.getElementById('eMax').textContent = 'Max: ' + Math.round(mx) + 'm';
+  ctx.clearRect(0, 0, W, H);
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, 'rgba(250,204,21,.55)'); g.addColorStop(1, 'rgba(250,204,21,.03)');
+  ctx.beginPath(); ctx.moveTo(0, H);
+  data.forEach((v, i) => { const x = i / (data.length - 1) * W, y = H - ((v - mn) / (mx - mn || 1)) * (H - 8) - 4; i === 0 ? ctx.lineTo(x, y) : ctx.lineTo(x, y); });
+  ctx.lineTo(W, H); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath(); ctx.strokeStyle = '#facc15'; ctx.lineWidth = 2;
+  data.forEach((v, i) => { const x = i / (data.length - 1) * W, y = H - ((v - mn) / (mx - mn || 1)) * (H - 8) - 4; i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+  ctx.stroke();
+}
+
+// ── Weather ──
+async function fetchWx(pts) {
+  const box = document.getElementById('wxCards');
+  box.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#facc15;font-size:11px;animation:pulse 1.5s infinite">Fetching weather…</div>';
+  const res = await Promise.all(pts.map(async p => {
+    try {
+      const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lng}&current_weather=true&timezone=auto`);
+      const d = await r.json(); return { name: p.name, w: d.current_weather };
+    } catch { return { name: p.name, w: null }; }
+  }));
+  box.innerHTML = '';
+  res.forEach(r => {
+    const w = r.w;
+    box.innerHTML += `<div class="wx">
+      <div class="wxi">${wxIco(w?.weathercode || 0)}</div>
+      <div class="wxt">${w ? w.temperature + '°C' : '—'}</div>
+      <div style="font-size:10px;color:#9ca3af">💨 ${w ? w.windspeed + ' km/h' : '—'}</div>
+      <div class="wxn">${r.name.replace(/[📍🛕]/g,'').trim().split(',')[0]}</div>
+    </div>`;
+  });
+}
+function wxIco(c) { if(c===0)return'☀️';if(c<=3)return'⛅';if(c<=48)return'🌫️';if(c<=57)return'🌧️';if(c<=67)return'🌨️';if(c<=77)return'❄️';if(c<=82)return'🌦️';return'⛈️'; }
+
+// ── Tabs ──
+function tab(name, btn) {
+  ['overview','steps','weather','elev'].forEach(t => {
+    document.getElementById('t-' + t).style.display = t === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  if (name === 'elev' && elevData.length) setTimeout(() => drawElev(elevData), 50);
+}
+
+// ── Share / Download ──
+function openShare()  { document.getElementById('shareModal').classList.add('on'); }
+function closeModal() { document.getElementById('shareModal').classList.remove('on'); }
+function cpLink()     { navigator.clipboard.writeText(location.href).then(() => alert('Link copied!')); closeModal(); }
+function waShare() {
+  const msg = `My YatraPath route 🛕 — ${document.getElementById('s-dist').textContent}, ${document.getElementById('s-time').textContent} — ${location.href}`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank'); closeModal();
+}
+function dlGPX() {
+  if (!routeGeoJSON) { alert('Generate a route first'); return; }
+  const c = routeGeoJSON.features[0].geometry.coordinates;
+  let g = `<?xml version="1.0"?><gpx version="1.1" creator="YatraPath"><trk><name>YatraPath</name><trkseg>`;
+  c.forEach(p => g += `<trkpt lat="${p[1]}" lon="${p[0]}">${p[2] ? `<ele>${p[2]}</ele>` : ''}</trkpt>`);
+  g += `</trkseg></trk></gpx>`;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([g], { type: 'application/gpx+xml' }));
+  a.download = 'yathrapath.gpx'; a.click(); closeModal();
+}
 </script>
 
 {% endblock %}

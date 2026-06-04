@@ -73,9 +73,11 @@ def blog_detail(request, id):
 
 def route_planner(request):
     temples = Temple.objects.all()
+    print("TOKEN:", settings.MAPILLARY_TOKEN)
     return render(request, "core/route_planner.html", {
         "temples": temples,
         "ORS_KEY": settings.OPENROUTE_API_KEY,
+        "MAPILLARY_TOKEN": settings.MAPILLARY_TOKEN,
     })
 
 
@@ -83,6 +85,65 @@ def about(request):
     total_temples = Temple.objects.count()
     return render(request, 'core/about.html', {'total_temples': total_temples})
 
+@csrf_exempt
+def overpass_proxy(request):
+    """Server-side proxy for Overpass API to avoid browser CORS restrictions."""
+    import urllib.request
+    import urllib.parse
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    query = request.POST.get('data', '')
+    if not query:
+        try:
+            from urllib.parse import parse_qs
+            parsed = parse_qs(request.body.decode('utf-8'))
+            query = parsed.get('data', [''])[0]
+        except Exception:
+            pass
+    if not query:
+        try:
+            body = json.loads(request.body)
+            query = body.get('data', '')
+        except Exception:
+            pass
+
+    if not query:
+        return JsonResponse({'error': 'No query provided'}, status=400)
+
+    try:
+        encoded = urllib.parse.urlencode({'data': query}).encode('utf-8')
+
+        OVERPASS_SERVERS = [
+            'https://overpass.kumi.systems/api/interpreter',
+            'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+            'https://overpass-api.de/api/interpreter',
+        ]
+        result = None
+        for server in OVERPASS_SERVERS:
+            try:
+                req = urllib.request.Request(
+                    server,
+                    data=encoded,
+                    headers={
+                        'User-Agent': 'YatraPath/1.0',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    }
+                )
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    result = json.loads(resp.read().decode('utf-8'))
+                break
+            except Exception:
+                continue
+
+        if result is None:
+            return JsonResponse({'error': 'All Overpass servers failed'}, status=502)
+        return JsonResponse(result, safe=False)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=502)
 
 # ── Push Notification endpoints ───────────────────────────────────────────────
 

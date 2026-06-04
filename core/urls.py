@@ -11,6 +11,9 @@ urlpatterns = [
     path('blog/<int:id>/', views.blog_detail, name='blog_detail'),
     path('route-planner/', views.route_planner, name='route_planner'),
 
+    # Overpass proxy — fixes CORS error for toll/POI lookups
+    path('api/overpass/', views.overpass_proxy, name='overpass_proxy'),
+
     # Service worker (must be at root scope)
     path('sw.js',      views.service_worker, name='service_worker'),
     path('offline.html', views.offline_page, name='offline_page'),
