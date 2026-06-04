@@ -182,7 +182,7 @@ def vapid_public_key(request):
 def service_worker(request):
     sw_path = os.path.join(os.path.dirname(__file__), 'static', 'sw.js')
     try:
-        with open(sw_path, 'r') as f:
+        with open(sw_path, 'r', encoding='utf-8') as f:
             content = f.read()
     except FileNotFoundError:
         content = '// sw not found'

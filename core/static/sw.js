@@ -1,12 +1,13 @@
 /* =========================================================
-   YatraPath Service Worker — v3 (Offline PWA + Push)
+   YatraPath Service Worker — v4 (Offline PWA + Push)
    ========================================================= */
 
-const CACHE_NAME = 'yathrapath-v6';
+const CACHE_NAME = 'yathrapath-v7';
 
 // Core pages/assets to pre-cache for offline use
 const PRECACHE_URLS = [
   '/',
+  '/about/',
   '/static/css/output.css',
   '/static/manifest.json',
   '/offline.html',
@@ -17,14 +18,20 @@ const NETWORK_FIRST = [
   '/temples/',
   '/blog/',
   '/map/',
-  '/temple/',   // detail pages  
+  '/temple/',   // detail pages
+  '/about/',
 ];
 
 // ── Install ───────────────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(PRECACHE_URLS).catch(() => {});
+      // Use allSettled so one failing URL doesn't abort the whole install
+      return Promise.allSettled(
+        PRECACHE_URLS.map(url =>
+          cache.add(url).catch(err => console.warn('[SW] Failed to pre-cache:', url, err))
+        )
+      );
     })
   );
   self.skipWaiting();
@@ -66,10 +73,10 @@ self.addEventListener('fetch', event => {
           }
           return response;
         })
-        .catch(() => {
-          // Only fall back to cache when truly offline
-          return caches.match(event.request)
-              || caches.match('/offline.html');
+        .catch(async () => {
+          // Await both matches properly — fixes the || Promise bug
+          const cached = await caches.match(event.request);
+          return cached || caches.match('/offline.html');
         })
     );
     return;
@@ -95,8 +102,10 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request)
       .then(response => response)
-      .catch(() => caches.match(event.request)
-                || caches.match('/offline.html'))
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        return cached || caches.match('/offline.html');
+      })
   );
 });
 
