@@ -2,7 +2,7 @@
    YatraPath Service Worker — v9 (Offline PWA + Push)
    ========================================================= */
 
-const CACHE_NAME = 'yathrapath-v9';
+const CACHE_NAME = 'yathrapath-v10';
 
 const PRECACHE_URLS = [
   '/',
@@ -18,8 +18,6 @@ const NETWORK_FIRST = [
   '/map/',
   '/temple/',
   '/about/',
-  '/route-planner/',
-  '/lore/',
 ];
 
 // ── Install ───────────────────────────────────────────────
