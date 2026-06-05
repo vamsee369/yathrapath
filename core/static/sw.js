@@ -1,10 +1,9 @@
 /* =========================================================
-   YatraPath Service Worker — v4 (Offline PWA + Push)
+   YatraPath Service Worker — v9 (Offline PWA + Push)
    ========================================================= */
 
-const CACHE_NAME = 'yathrapath-v7';
+const CACHE_NAME = 'yathrapath-v9';
 
-// Core pages/assets to pre-cache for offline use
 const PRECACHE_URLS = [
   '/',
   '/about/',
@@ -13,20 +12,20 @@ const PRECACHE_URLS = [
   '/offline.html',
 ];
 
-// These pages always fetch fresh from network (never serve from cache)
 const NETWORK_FIRST = [
   '/temples/',
   '/blog/',
   '/map/',
-  '/temple/',   // detail pages
+  '/temple/',
   '/about/',
+  '/route-planner/',
+  '/lore/',
 ];
 
 // ── Install ───────────────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      // Use allSettled so one failing URL doesn't abort the whole install
       return Promise.allSettled(
         PRECACHE_URLS.map(url =>
           cache.add(url).catch(err => console.warn('[SW] Failed to pre-cache:', url, err))
@@ -49,16 +48,26 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
+// ── Shared offline fallback ───────────────────────────────
+async function offlineFallback(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  const offline = await caches.match('/offline.html');
+  if (offline) return offline;
+  return new Response(
+    '<!DOCTYPE html><html><body style="background:#050508;color:#eab308;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center"><h1>You are offline</h1></body></html>',
+    { headers: { 'Content-Type': 'text/html' } }
+  );
+}
+
 // ── Fetch ─────────────────────────────────────────────────
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Always skip admin
   if (url.pathname.startsWith('/admin/')) return;
 
-  // Network-first for dynamic pages — always get fresh content
   const isDynamic = NETWORK_FIRST.some(path => url.pathname.startsWith(path))
                  || url.pathname === '/';
 
@@ -66,23 +75,17 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // Update cache with fresh response
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           }
           return response;
         })
-        .catch(async () => {
-          // Await both matches properly — fixes the || Promise bug
-          const cached = await caches.match(event.request);
-          return cached || caches.match('/offline.html');
-        })
+        .catch(() => offlineFallback(event.request))
     );
     return;
   }
 
-  // Cache-first for static assets (CSS, JS, images, fonts)
   if (url.pathname.startsWith('/static/')) {
     event.respondWith(
       caches.match(event.request).then(cached => {
@@ -98,41 +101,34 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Everything else — network first, fall back to cache
+  // Everything else
   event.respondWith(
     fetch(event.request)
       .then(response => response)
-      .catch(async () => {
-        const cached = await caches.match(event.request);
-        return cached || caches.match('/offline.html');
-      })
+      .catch(() => offlineFallback(event.request))
   );
 });
 
 // ── Push Notifications ────────────────────────────────────
 self.addEventListener('push', event => {
   let data = { title: 'YatraPath', body: 'Something new awaits!', url: '/' };
+  try { data = JSON.parse(event.data.text()); } catch (_) {}
 
-  try {
-    data = JSON.parse(event.data.text());
-  } catch (_) {}
-
-  // keepalive: event.waitUntil keeps the SW alive until notification is shown
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body:             data.body,
-      icon:             '/static/images/icons/icon-512.png',   // larger = better on Android
-      badge:            '/static/images/icons/icon-192.png',   // small monochrome icon in status bar
+      icon:             '/static/images/icons/icon-512.png',
+      badge:            '/static/images/icons/icon-192.png',
       data:             { url: data.url },
-      vibrate:          [200, 100, 200, 100, 200],             // stronger pattern = wakes screen
-      requireInteraction: true,                                 // ← stays visible until user taps (Android/desktop)
-      tag:              'yathrapath-' + Date.now(),             // ← unique per notification = each one rings
-      renotify:         true,                                   // ← always alert regardless of tag
-      silent:           false,                                  // ← explicitly NOT silent
+      vibrate:          [200, 100, 200, 100, 200],
+      requireInteraction: true,
+      tag:              'yathrapath-' + Date.now(),
+      renotify:         true,
+      silent:           false,
       timestamp:        Date.now(),
       actions: [
-        { action: 'open',    title: '👁️ View' },
-        { action: 'dismiss', title: '✖ Dismiss' },
+        { action: 'open',    title: 'View' },
+        { action: 'dismiss', title: 'Dismiss' },
       ],
     })
   );
@@ -141,15 +137,12 @@ self.addEventListener('push', event => {
 // ── Notification Click ────────────────────────────────────
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-
-  // Handle action buttons
   if (event.action === 'dismiss') return;
 
   const url = event.notification.data?.url || '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(wins => {
-      // If app already open, focus it and navigate
       for (const win of wins) {
         if ('focus' in win) {
           win.focus();
@@ -157,7 +150,6 @@ self.addEventListener('notificationclick', event => {
           return;
         }
       }
-      // Otherwise open a new window
       if (clients.openWindow) return clients.openWindow(url);
     })
   );

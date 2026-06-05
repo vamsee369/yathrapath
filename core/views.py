@@ -195,7 +195,7 @@ def service_worker(request):
 def offline_page(request):
     offline_path = os.path.join(os.path.dirname(__file__), 'static', 'offline.html')
     try:
-        with open(offline_path, 'r') as f:
+        with open(offline_path, 'r', encoding='utf-8') as f:
             content = f.read()
     except FileNotFoundError:
         content = '<h1>Offline</h1>'
@@ -311,3 +311,5 @@ Rules:
 def lore_page(request):
     temples = Temple.objects.order_by('-id')
     return render(request, 'core/lore.html', {'temples': temples})
+def custom_404(request, exception):
+    return render(request, 'core/offline.html', status=404)
