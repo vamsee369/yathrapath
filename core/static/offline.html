@@ -430,19 +430,15 @@
     // More reliable than navigator.onLine which DevTools throttle doesn't always update
     async function detectMode() {
       try {
-        const res = await fetch('/static/manifest.json', {
+        const res = await fetch('/static/manifest.json?_=' + Date.now(), {
           cache: 'no-store',
           signal: AbortSignal.timeout(3000)
         });
-        if (res.ok) {
-          setNotFoundMode(); // server reachable = we're online = this is a 404
-        } else {
+        res.ok ? setNotFoundMode() : setOfflineMode();
+        } catch {
           setOfflineMode();
         }
-      } catch {
-        setOfflineMode(); // fetch failed = truly offline
       }
-    }
 
     detectMode();
 
