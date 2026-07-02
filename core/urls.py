@@ -3,13 +3,13 @@ from . import views
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('temple/<int:id>/', views.temple_detail, name='temple_detail'),
+    path('destinations/<int:id>/', views.temple_detail, name='temple_detail'),
     path('map/', views.map_view, name='map'),
-    path('temples/', views.temples, name='temples'),
+    path('destinations/', views.temples, name='temples'),
     path('blog/', views.blog, name='blog'),
     path('blog/create/', views.blog_create, name='blog_create'),
     path('blog/<int:id>/', views.blog_detail, name='blog_detail'),
-    path('route-planner/', views.route_planner, name='route_planner'),
+    path('route_planner/', views.route_planner, name='route_planner'),
 
     # Overpass proxy — fixes CORS error for toll/POI lookups
     path('api/overpass/', views.overpass_proxy, name='overpass_proxy'),
@@ -23,6 +23,6 @@ urlpatterns = [
     path('push/unsubscribe/', views.push_unsubscribe, name='push_unsubscribe'),
     path('push/vapid-key/',   views.vapid_public_key, name='vapid_public_key'),
     path('about/', views.about, name='about'),
-    path('lore-engine/', views.lore_page, name='lore_page'),
+    path('lore_engine/', views.lore_page, name='lore_page'),
     path('lore/', views.lore_engine, name='lore_engine'),
 ]
