@@ -13,7 +13,7 @@ const PRECACHE_URLS = [
 ];
 
 const NETWORK_FIRST = [
-  '/temples/',
+  '/destinatios/',
   '/blog/',
   '/map/',
   '/temple/',
