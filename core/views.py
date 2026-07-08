@@ -319,3 +319,6 @@ def custom_404(request, exception):
     except FileNotFoundError:
         content = '<h1>Page not found</h1>'
     return HttpResponse(content, content_type='text/html', status=404)
+def destination_ids(request):
+    ids = list(Temple.objects.values_list('id', flat=True))
+    return JsonResponse({'ids': ids})

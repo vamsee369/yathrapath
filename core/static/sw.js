@@ -1,39 +1,51 @@
-/* =========================================================
-   YatraPath Service Worker — v9 (Offline PWA + Push)
-   ========================================================= */
 
-const CACHE_NAME = 'yathrapath-v10';
+const CACHE_NAME = 'yathrapath-v12';
 
 const PRECACHE_URLS = [
   '/',
   '/about/',
   '/static/css/output.css',
   '/static/manifest.json',
-  '/offline.html',
 ];
 
 const NETWORK_FIRST = [
-  '/temples/',
+  '/destinations/',
   '/blog/',
   '/map/',
-  '/temple/',
   '/about/',
 ];
 
 // ── Install ───────────────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return Promise.allSettled(
+    caches.open(CACHE_NAME).then(async cache => {
+
+      // Cache offline page FIRST — this must succeed
+      await cache.add('/offline.html');
+
+      // Then cache the rest (failures are okay)
+      await Promise.allSettled(
         PRECACHE_URLS.map(url =>
           cache.add(url).catch(err => console.warn('[SW] Failed to pre-cache:', url, err))
         )
       );
+
+      // Then precache all destination detail pages
+      try {
+        const res = await fetch('/api/destination-ids/');
+        const { ids } = await res.json();
+        await Promise.allSettled(
+          ids.map(id =>
+            cache.add(`/destinations/${id}/`).catch(e => console.warn('[SW] detail fail:', id, e))
+          )
+        );
+      } catch (e) {
+        console.warn('[SW] Could not precache destinations:', e);
+      }
     })
   );
   self.skipWaiting();
 });
-
 // ── Activate ──────────────────────────────────────────────
 self.addEventListener('activate', event => {
   event.waitUntil(

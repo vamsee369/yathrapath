@@ -1,7 +1,7 @@
 {
-    "name": "YatraPath - Divine Travel Planner",
+    "name": "YatraPath - Travel Planner",
     "short_name": "YatraPath",
-    "description": "Plan your pilgrimage and heritage travel across India",
+    "description": "Plan your scenic and all travel plans across India",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#000000",

@@ -20,6 +20,7 @@ ALLOWED_HOSTS = ["yathrapath.onrender.com", "localhost", "127.0.0.1"]
 
 # ── Apps ─────────────────────────────────────────────
 INSTALLED_APPS = [
+    'jazzmin', 
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -140,3 +141,20 @@ VAPID_CLAIMS = {
     "sub": os.getenv("WEBPUSH_VAPID_ADMIN_EMAIL")
 }
 MAPILLARY_TOKEN = os.environ.get('MAPILLARY_TOKEN', '')
+JAZZMIN_SETTINGS = {
+    "site_title": "YatraPath Admin",
+    "site_header": "YatraPath",
+    "site_brand": "YatraPath 🛕",
+    "welcome_sign": "Welcome to YatraPath Admin",
+    "copyright": "YatraPath",
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "icons": {
+        "core.temple": "fas fa-place-of-worship",
+        "core.blog": "fas fa-blog",
+        "auth.user": "fas fa-user",
+        "auth.group": "fas fa-users",
+    },
+    "default_icon_parents": "fas fa-chevron-circle-right",
+    "default_icon_children": "fas fa-circle",
+}

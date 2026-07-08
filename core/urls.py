@@ -25,4 +25,5 @@ urlpatterns = [
     path('about/', views.about, name='about'),
     path('lore_engine/', views.lore_page, name='lore_page'),
     path('lore/', views.lore_engine, name='lore_engine'),
+    path('api/destination-ids/', views.destination_ids, name='destination_ids'),
 ]
