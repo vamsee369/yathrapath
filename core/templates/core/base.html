@@ -3,171 +3,14 @@
 <html>
 
 <head>
-    <!-- ── Critical meta first — browser can start rendering ASAP ── -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>YatraPath</title>
-    <link rel="icon" href="{% static 'images/favicon.ico' %}?v=2">
-
-    <!-- ── Loading Screen styles FIRST — paints before any external CSS ── -->
-    <!-- ── Loading Screen ── -->
-    <style>
-      /* Prevent white flash before Tailwind loads */
-      html, body { background: #06060a !important; }
-
-      #yp-loader {
-        position: fixed;
-        inset: 0;
-        z-index: 99999;
-        background: #06060a;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        transition: opacity 0.25s ease, visibility 0.25s;
-      }
-      #yp-loader.hide {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-      }
-      #yp-loader.gone {
-        display: none;
-      }
-      #yp-loader::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image:
-          linear-gradient(rgba(234,179,8,0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(234,179,8,0.03) 1px, transparent 1px);
-        background-size: 72px 72px;
-        pointer-events: none;
-      }
-      .yp-orb {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(90px);
-        pointer-events: none;
-      }
-      .yp-orb-1 {
-        width: 500px; height: 500px;
-        background: rgba(234,179,8,0.055);
-        top: -120px; left: -120px;
-        animation: ypOrbPulse 5s ease-in-out infinite alternate;
-      }
-      .yp-orb-2 {
-        width: 380px; height: 380px;
-        background: rgba(234,100,8,0.04);
-        bottom: -80px; right: -80px;
-        animation: ypOrbPulse 5s 2.5s ease-in-out infinite alternate;
-      }
-      @keyframes ypOrbPulse {
-        from { transform: scale(1);   opacity: 0.6; }
-        to   { transform: scale(1.2); opacity: 1;   }
-      }
-      .yp-compass {
-        position: relative;
-        z-index: 1;
-        width: 108px;
-        height: 108px;
-        margin-bottom: 1.8rem;
-      }
-      .yp-compass svg { width: 100%; height: 100%; }
-      .yp-ring-spin {
-        animation: ypRingSpin 3s linear infinite;
-        transform-origin: 54px 54px;
-      }
-      @keyframes ypRingSpin { to { transform: rotate(360deg); } }
-      .yp-needle {
-        transform-origin: 54px 54px;
-        animation: ypNeedle 2.4s ease-in-out infinite;
-      }
-      @keyframes ypNeedle {
-        0%,100% { transform: rotate(-9deg); }
-        50%      { transform: rotate(9deg);  }
-      }
-      .yp-brand {
-        position: relative;
-        z-index: 1;
-        font-family: 'Playfair Display', serif;
-        font-size: 1.7rem;
-        font-weight: 600;
-        color: #fff;
-        letter-spacing: 0.04em;
-        margin-bottom: 0.3rem;
-      }
-      .yp-brand span { color: #eab308; }
-      .yp-tagline {
-        position: relative;
-        z-index: 1;
-        font-family: 'Poppins', sans-serif;
-        font-size: 0.66rem;
-        font-weight: 400;
-        color: #6b7280;
-        letter-spacing: 0.22em;
-        text-transform: uppercase;
-        margin-bottom: 2.2rem;
-      }
-      .yp-track {
-        position: relative;
-        z-index: 1;
-        width: 156px;
-        height: 1px;
-        background: rgba(234,179,8,0.12);
-        border-radius: 999px;
-        overflow: hidden;
-      }
-      .yp-bar {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, #92610a, #eab308, #fbbf24);
-        border-radius: 999px;
-        box-shadow: 0 0 10px rgba(234,179,8,0.55);
-        transition: width 0.1s linear;
-      }
-      .yp-dots {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        gap: 6px;
-        margin-top: 1.1rem;
-      }
-      .yp-dot {
-        width: 4px; height: 4px;
-        border-radius: 50%;
-        background: rgba(234,179,8,0.5);
-        animation: ypDot 1.2s ease-in-out infinite;
-      }
-      .yp-dot:nth-child(2) { animation-delay: 0.2s; }
-      .yp-dot:nth-child(3) { animation-delay: 0.4s; }
-      @keyframes ypDot {
-        0%,80%,100% { transform: scale(0.6); opacity: 0.3; }
-        40%          { transform: scale(1.3); opacity: 1;   }
-      }
-    </style>
-
-    <!-- ── Preconnect so external origins resolve in parallel ── -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://unpkg.com">
-
-    <!-- ── App CSS (non-critical — loads after loader is already visible) ── -->
-    <!-- Tailwind output -->
-    <link rel="stylesheet" href="{% static 'css/output.css' %}" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="{% static 'css/output.css' %}"></noscript>
-
-    <!-- Google Fonts — non-blocking (font-display:swap is set server-side by Google) -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500&display=swap"
-        rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500&display=swap" rel="stylesheet"></noscript>
-
-    <!-- Leaflet CSS — non-blocking (map is never above the fold on load) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"></noscript>
-
-    <!-- Leaflet popup styles (small inline block, needed when map loads) -->
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500&display=swap"
+        rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
         .leaflet-popup-content-wrapper {
             background: rgba(15, 15, 26, 0.9);
@@ -175,11 +18,13 @@
             border-radius: 15px;
             color: white;
         }
+
         .leaflet-popup-tip {
             background: rgba(15, 15, 26, 0.9);
         }
     </style>
-
+    <link rel="icon" href="{% static 'images/favicon.ico' %}?v=2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- PWA Manifest -->
     <link rel="manifest" href="{% static 'manifest.json' %}">
 
@@ -230,136 +75,6 @@
 </head>
 
 <body class="relative min-h-screen text-white overflow-x-hidden bg-black">
-
-    <!-- ── Loading Screen ── -->
-    <div id="yp-loader">
-      <div class="yp-orb yp-orb-1"></div>
-      <div class="yp-orb yp-orb-2"></div>
-
-      <!-- Compass -->
-      <div class="yp-compass">
-        <svg viewBox="0 0 108 108" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- static outer ring -->
-          <circle cx="54" cy="54" r="50" stroke="rgba(234,179,8,0.14)" stroke-width="1"/>
-          <!-- spinning dashed ring -->
-          <circle class="yp-ring-spin" cx="54" cy="54" r="44"
-            stroke="rgba(234,179,8,0.28)" stroke-width="0.8"
-            stroke-dasharray="6 10" stroke-linecap="round"/>
-          <!-- cardinal ticks -->
-          <line x1="54" y1="4"  x2="54" y2="14" stroke="rgba(234,179,8,0.5)" stroke-width="1.2" stroke-linecap="round"/>
-          <line x1="54" y1="94" x2="54" y2="104" stroke="rgba(234,179,8,0.25)" stroke-width="0.8"/>
-          <line x1="4"  y1="54" x2="14" y2="54" stroke="rgba(234,179,8,0.25)" stroke-width="0.8"/>
-          <line x1="94" y1="54" x2="104" y2="54" stroke="rgba(234,179,8,0.25)" stroke-width="0.8"/>
-          <!-- N label -->
-          <text x="54" y="22" text-anchor="middle" fill="rgba(234,179,8,0.7)"
-            font-family="Poppins,sans-serif" font-size="8" font-weight="600" letter-spacing="1">N</text>
-          <!-- inner circle -->
-          <circle cx="54" cy="54" r="28" stroke="rgba(234,179,8,0.08)" stroke-width="0.6"/>
-          <!-- center dot -->
-          <circle cx="54" cy="54" r="4" fill="rgba(234,179,8,0.5)"/>
-          <circle cx="54" cy="54" r="2" fill="#eab308"/>
-          <!-- needle -->
-          <g class="yp-needle">
-            <polygon points="54,18 50,52 58,52" fill="#eab308" opacity="0.92"/>
-            <polygon points="54,90 50,56 58,56" fill="rgba(234,179,8,0.22)"/>
-          </g>
-        </svg>
-      </div>
-
-      <div class="yp-brand">Yathra<span>Path</span></div>
-      <div class="yp-tagline">Every path tells a story</div>
-
-      <div class="yp-track">
-        <div class="yp-bar" id="yp-bar"></div>
-      </div>
-      <div class="yp-dots">
-        <div class="yp-dot"></div>
-        <div class="yp-dot"></div>
-        <div class="yp-dot"></div>
-      </div>
-    </div>
-
-    <script>
-      (function () {
-        var bar    = document.getElementById('yp-bar');
-        var loader = document.getElementById('yp-loader');
-
-        /* ── helper: reset & show loader instantly ── */
-        function showLoader() {
-          clearInterval(timer);
-          clearTimeout(hideTimer);
-          loader.classList.remove('gone');
-          loader.classList.remove('hide');
-          bar.style.transition = 'none';
-          bar.style.width = '0%';
-          /* force reflow so reset is applied before animation restarts */
-          loader.offsetHeight;
-          bar.style.transition = '';
-          startProgress();
-        }
-
-        /* ── progress bar animation ── */
-        var prog = 0;
-        var timer = null;
-        var hideTimer = null;
-        function startProgress() {
-          clearInterval(timer);
-          prog = 0;
-          timer = setInterval(function () {
-            prog += prog < 70 ? (Math.random() * 7 + 3) : (Math.random() * 1.5 + 0.3);
-            if (prog > 92) prog = 92;
-            bar.style.width = prog + '%';
-          }, 120);
-        }
-
-        /* ── hide loader when page finishes loading ── */
-        function done() {
-          clearInterval(timer);
-          bar.style.width = '100%';
-          hideTimer = setTimeout(function () {
-            loader.classList.add('hide');
-            /* fully remove from paint stack after transition ends */
-            setTimeout(function () { loader.classList.add('gone'); }, 300);
-          }, 150);
-        }
-
-        /* ── initial page load ── */
-        startProgress();
-        if (document.readyState === 'complete') {
-          done();
-        } else {
-          window.addEventListener('load', done);
-          setTimeout(done, 2500);
-        }
-
-        /* ── show loader instantly on ANY internal link click ── */
-        document.addEventListener('click', function (e) {
-          var anchor = e.target.closest('a');
-          if (!anchor) return;
-
-          var href = anchor.getAttribute('href');
-          if (!href) return;
-
-          /* skip: new tab, external, hash-only, javascript:, mailto:, tel: */
-          if (anchor.target === '_blank') return;
-          if (/^(https?:\/\/|mailto:|tel:|javascript:)/.test(href)) return;
-          if (href.startsWith('#')) return;
-          /* skip if modifier key held (open in new tab etc.) */
-          if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-
-          showLoader();
-        });
-
-        /* ── also show on browser back/forward navigation ── */
-        window.addEventListener('pageshow', function (e) {
-          /* bfcache restore — page came from cache, hide loader immediately */
-          if (e.persisted) {
-            done();
-          }
-        });
-      })();
-    </script>
-
     <!-- Background Glow -->
     <div class="absolute w-96 h-96 bg-yellow-500 opacity-20 rounded-full blur-3xl top-10 left-10 animate-pulse"></div>
     <div class="absolute w-96 h-96 bg-orange-500 opacity-20 rounded-full blur-3xl bottom-10 right-10 animate-pulse">
